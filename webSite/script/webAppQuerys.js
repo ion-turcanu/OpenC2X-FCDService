@@ -26,7 +26,7 @@
  * @param callback  fn(data)
  */
 function requestMyMac(callback){
-	$.get("http://localhost:1188/my_mac",
+	$.get("/api/my_mac",
 			function(data){
 		callback(data);
 	},"json");
@@ -38,7 +38,7 @@ function requestMyMac(callback){
  * @param callback fn(data)
  */
 function requestCam(callback){
-	$.post("http://localhost:1188/request_cam",JSON.stringify({condition:"latest"}),
+	$.post("/api/request_cam",JSON.stringify({condition:"latest"}),
 			function(data/*status,xhr*/){
 		//console.log("data: "+data);
 		//console.log("status: "+status);
@@ -52,7 +52,7 @@ function requestCam(callback){
  * @param callback fn(data)
  */
 function requestCamInfo(callback){
-	$.post("http://localhost:1188/request_caminfo",JSON.stringify({condition:"latest"}),
+	$.post("/api/request_caminfo",JSON.stringify({condition:"latest"}),
 			function(data){
 		callback(data.msgs[data.msgs.length-1]);
 	},"json");
@@ -64,7 +64,7 @@ function requestCamInfo(callback){
  * @param callback fn(data)
  */
 function requestDenm(callback){
-	$.post("http://localhost:1188/request_denm",JSON.stringify({condition:"latest"}),
+	$.post("/api/request_denm",JSON.stringify({condition:"latest"}),
 			function(data){
 		callback(data);
 	},"json");
@@ -74,11 +74,11 @@ function requestDenm(callback){
  * requests gps data.
  * from httpServer via http and calls the callback function with the data.
  * @deprecated untested
- * 
+ *
  * @param callback fn(data)
  */
 function requestGps(callback){
-	$.post("http://localhost:1188/request_gps",JSON.stringify({condition:""}),
+	$.post("/api/request_gps",JSON.stringify({condition:""}),
 			function(data){
 		callback(data.msgs[data.msgs.length-1]);
 	},"json");
@@ -88,11 +88,11 @@ function requestGps(callback){
  * requests obd2 data.
  * from httpServer via http and calls the callback function with the data.
  * @deprecated untested
- * 
+ *
  * @param callback fn(data)
  */
 function requestObd2(callback){
-	$.post("http://localhost:1188/request_obd2",JSON.stringify({condition:""}),
+	$.post("/api/request_obd2",JSON.stringify({condition:""}),
 			function(data){
 		callback(data.msgs[data.msgs.length-1]);
 	},"json");
@@ -104,16 +104,16 @@ function requestObd2(callback){
  * @param callback fn(data)
  */
 function requestDccInfo(callback){
-	$.post("http://localhost:1188/request_dccinfo",JSON.stringify({condition:"latest"}),
+	$.post("/api/request_dccinfo",JSON.stringify({condition:"latest"}),
 			function(data){
 		callback(data.msgs[data.msgs.length-1]);
 	},"json");
 }
 
 function requestAC_BE(callback){
-	$.post("http://localhost:1188/request_dccinfo",JSON.stringify({condition:"latest"}),
+	$.post("/api/request_dccinfo",JSON.stringify({condition:"latest"}),
 			function(data){
-		var table = {};		
+		var table = {};
 		table["AC_BE"] = {
 							"category " : data.msgs[0].Cat0.accessCategory,
 							"state           " : data.msgs[0].Cat0.state,
@@ -123,7 +123,7 @@ function requestAC_BE(callback){
 							"channel load    " : data.msgs[0].Cat0.channelLoad//,
 							//"carrier sense   " : data.msgs[0].Cat0.carrierSense,    // These are just hard coded values, can be ignored
 							//"data rate       " : data.msgs[0].Cat0.datarate,
-							//"tx power        " : data.msgs[0].Cat0.txPower						
+							//"tx power        " : data.msgs[0].Cat0.txPower
 						};
 		callback(table);
 		//callback(data.msgs[data.msgs.length-1]);
@@ -131,7 +131,7 @@ function requestAC_BE(callback){
 }
 
 function requestAC_VI(callback){
-	$.post("http://localhost:1188/request_dccinfo",JSON.stringify({condition:"latest"}),
+	$.post("/api/request_dccinfo",JSON.stringify({condition:"latest"}),
 			function(data){
 		var table = {};
 		table["AC_VI"] = {
@@ -143,7 +143,7 @@ function requestAC_VI(callback){
 							"channel load    " : data.msgs[0].Cat2.channelLoad//,
 							//"carrier sense   " : data.msgs[0].Cat2.carrierSense,
 							//"data rate       " : data.msgs[0].Cat2.datarate,
-							//"tx power        " : data.msgs[0].Cat2.txPower						
+							//"tx power        " : data.msgs[0].Cat2.txPower
 						};
 		callback(table);
 		//callback(data.msgs[data.msgs.length-1]);
@@ -155,7 +155,7 @@ function requestAC_VI(callback){
  * via http request to httpServer
  */
 function triggerDenm(){
-	$.post("http://localhost:1188/trigger_denm",JSON.stringify({content: "triggered by GUI"}),	
+	$.post("/api/trigger_denm",JSON.stringify({content: "triggered by GUI"}),
 			function(data,status,xhr){
 		console.log("data: "+data);
 		console.log("status: "+status);
