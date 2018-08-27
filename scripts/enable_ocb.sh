@@ -1,9 +1,10 @@
 #!/bin/bash
 
-IFACE=wlan0		# wireless interface
+IFACE=wlp0s12		# wireless interface
 FREQ=5890		# in MHz
+#FREQ=2442
 BAND=10MHZ		# 10 MHZ is default in ITS-G5
-IP_ADDR=192.168.1.2
+IP_ADDR=192.168.1.33
 
 # set the proper regulatory domain
 iw reg set AA

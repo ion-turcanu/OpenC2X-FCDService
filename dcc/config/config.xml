@@ -17,9 +17,9 @@
 	<NDL_maxPacketInterval>4.00</NDL_maxPacketInterval> <!-- default 1.00! -->
 	<NDL_defPacketInterval>0.50</NDL_defPacketInterval>
 
-	<NDL_maxTxPower>33.00</NDL_maxTxPower>
+	<NDL_maxTxPower>-33.00</NDL_maxTxPower>
 	<NDL_minTxPower>-10.00</NDL_minTxPower>
-	<NDL_defTxPower>23.00</NDL_defTxPower>
+	<NDL_defTxPower>-23.00</NDL_defTxPower>
 
 	<NDL_minDatarate>3.00</NDL_minDatarate>
 	<NDL_maxDatarate>12.00</NDL_maxDatarate>
