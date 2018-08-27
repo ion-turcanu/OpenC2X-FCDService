@@ -18,12 +18,13 @@ include_directories(
 
 link_directories(
     ${Boost_LIBRARY_DIRS}
-    ${ASN1C_EXECUTABLE}	
+    ${ASN1C_EXECUTABLE}
 )
 
 add_subdirectory(common)
 add_subdirectory(dcc)
 add_subdirectory(cam)
+add_subdirectory(fcd)
 add_subdirectory(denm)
 add_subdirectory(denmApp)
 add_subdirectory(gps)
@@ -40,4 +41,3 @@ ADD_CUSTOM_COMMAND(
     TARGET config
     COMMAND mkdir -p ${CMAKE_BINARY_DIR}/binaries
 )
-
