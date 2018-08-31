@@ -26,10 +26,18 @@ public:
     FcdService(std::string globalConfig, std::string loggingConf, std::string statisticConf);
     ~FcdService();
 
-private:
-    CommunicationSender* mSenderToLdm;
+    void sendLoop();
+    void receive();
 
-    GlobalConfig mGlobalConfig;
+private:
+    CommunicationSender*   mSenderToLdm;
+    CommunicationReceiver* mReceiverFromLdm;
+    GlobalConfig           mGlobalConfig;
+
+    boost::thread* mThreadSender;
+    boost::thread* mThreadReceiver;
+
+    LoggingUtility* mLogger;
 };
 
 #endif
