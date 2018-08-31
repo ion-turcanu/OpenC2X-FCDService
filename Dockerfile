@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 MAINTAINER Florian Adamsky <florian.adamsky@uni.lu>
 
@@ -9,7 +9,7 @@ RUN apt-get update \
                 cmake \
                 libprotobuf-dev \
                 libboost-thread-dev \
-                libprotobuf8 \
+                libprotobuf9v5 \
                 protobuf-compiler \
                 libzmqpp-dev \
                 libzmqpp-dev \
