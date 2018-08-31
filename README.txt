@@ -4,8 +4,7 @@
 
 To Compile the software in a docker container, you can use the following command:
 
-$ docker build -t fcd:v1 .
-
+$ sudo docker build -t fcd:v1 .
 
 ----------------------------------------------------------------------------------------------------
                                              OpenC2X
