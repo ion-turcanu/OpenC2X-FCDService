@@ -18,8 +18,8 @@ FcdService::FcdService(string globalConfig, string logConf, string statConf) {
     mLogger = new LoggingUtility("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
 
     // Sender and Receiver
-    mReceiverFromLdm = new CommunicationReceiver("FcdService", "5555", "FCD", mGlobalConfig.mExpNo, logConf, statConf);
-    mSenderToLdm     = new CommunicationSender("FcdService", "8888", mGlobalConfig.mExpNo, logConf, statConf);
+    mReceiverFromLdm = new CommunicationReceiver("FcdService", "2323", "FCD", mGlobalConfig.mExpNo, logConf, statConf);
+    mSenderToLdm     = new CommunicationSender("FcdService", "4242", mGlobalConfig.mExpNo, logConf, statConf);
 
     // Start the threads
     mThreadSender   = new boost::thread(&FcdService::sendLoop, this);
