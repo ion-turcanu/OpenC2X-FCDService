@@ -207,9 +207,9 @@ void SendToHardwareViaMAC::sendWithGeoNet(string* msg, int priority, int type) {
 			geoHdr = reinterpret_cast<uint8_t*>(&mGeoBtpHdrForCam);
 			break;
 		case dataPackage::DATA_Type_FCD:
-			fillGeoNetBTPheaderForCam(msg->size());
-			geoHdrLen = sizeof(struct GeoNetworkAndBTPHeaderCAM);
-			geoHdr = reinterpret_cast<uint8_t*>(&mGeoBtpHdrForCam);
+			fillFcdHeader(msg->size());
+			geoHdrLen = sizeof(struct GeoNetworkAndBTPHeaderFCD);
+			geoHdr = reinterpret_cast<uint8_t*>(&mGeoBtpHdrForFcd);
 			break;
 		default:
 			mLogger->logError("Queued packet has invalid type: " + to_string(type));
@@ -331,9 +331,19 @@ void SendToHardwareViaMAC::fillGeoNetBTPheaderForDenm(int payloadLen) {
 	//dumpBuffer(temp, sizeof(mGeoBtpHdrForDenm));
 }
 
-/*void SendToHardwareViaMAC::fillFcdHeader(int payloadLen) {
+void SendToHardwareViaMAC::fillFcdHeader(int payloadLen) {
+	mGeoBtpHdrForFcd.mGeoNetHdr.basicHeader.versionAndNH = 1;
+	mGeoBtpHdrForFcd.mGeoNetHdr.basicHeader.reserved = 0;
+	mGeoBtpHdrForFcd.mGeoNetHdr.basicHeader.lifetime = 241;
+	mGeoBtpHdrForFcd.mGeoNetHdr.basicHeader.remainingHopLimit = 1;
 
-}*/
+	mGeoBtpHdrForFcd.mGeoNetHdr.commonHeader.nhAndReserved = 32;
+	mGeoBtpHdrForFcd.mGeoNetHdr.commonHeader.htAndHst = 42;
+	mGeoBtpHdrForFcd.mGeoNetHdr.commonHeader.tc = 1;
+	mGeoBtpHdrForFcd.mGeoNetHdr.commonHeader.payload = htons(payloadLen + sizeof(struct BTPHeader));
+	mGeoBtpHdrForFcd.mGeoNetHdr.commonHeader.maxHop = 1;
+	mGeoBtpHdrForFcd.mGeoNetHdr.commonHeader.reserved = 0;
+}
 
 void SendToHardwareViaMAC::dumpBuffer(const uint8_t* buffer, int size) {
 	for (int i = 0; i < size; i++) {

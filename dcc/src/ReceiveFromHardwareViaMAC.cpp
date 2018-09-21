@@ -23,6 +23,10 @@
 #include "ReceiveFromHardwareViaMAC.h"
 #include "GeoNetHeaders.h"
 
+#include <iostream>
+#include <fstream>
+#include <stdlib.h> 
+
 using namespace std;
 
 ReceiveFromHardwareViaMAC::ReceiveFromHardwareViaMAC(string ownerModule, int expNo, string loggingConf, string statisticConf) {
@@ -104,6 +108,7 @@ pair<ReceivedPacketInfo, string> ReceiveFromHardwareViaMAC::receiveWithGeoNetHea
 		string senderMac = ether_ntoa((struct ether_addr*)mEth_hdr->ether_shost);
 		// Hack! As of now, we are looking for very specific bits in the GeoNetworking header
 		char* geoNetPDU = mPacket + mLinkLayerLength;
+		//saveToFile(geoNetPDU); //TODO: this line is to be deleted
 		if (geoNetPDU[5] == 80) {
 			// CAM
 			int camPDULen = geoNetPDULen - sizeof(struct GeoNetworkAndBTPHeaderCAM);
@@ -122,9 +127,34 @@ pair<ReceivedPacketInfo, string> ReceiveFromHardwareViaMAC::receiveWithGeoNetHea
 			info.mSenderMac = senderMac;
 			info.mType = dataPackage::DATA_Type_DENM;
 			return make_pair(info, msg);
+		} else if (geoNetPDU[5] == 42) {
+			// FCD
+			std::cout << "[RcvdFromHW] Received FCD from HW" << std::endl;
+			int denmPDULen = geoNetPDULen - sizeof(struct GeoNetworkAndBTPHeaderFCD);
+			char* denmPDU = geoNetPDU + sizeof(struct GeoNetworkAndBTPHeaderFCD);
+			string msg(denmPDU, denmPDULen);
+			ReceivedPacketInfo info;
+			info.mSenderMac = senderMac;
+			info.mType = dataPackage::DATA_Type_FCD;
+			return make_pair(info, msg);
 		} else {
 			// TODO: Possible cases?
 			continue;
 		}
 	}
+}
+
+void ReceiveFromHardwareViaMAC::saveToFile(char* mVector){
+	int id = rand() % 100;
+	ofstream out;
+	//out.open("hexdump" + static_cast<char>(id), ios::binary);
+	out.open("hexdump.dat", ios::binary);
+	if(! out)
+	{  
+		std::cout<<"Cannot open output file" << std::endl;
+		return;
+	}
+	std::cout<<"Writing to FILE!!!!" << std::endl;
+	out.write((char *)mVector,sizeof(mVector));
+	out.close();
 }

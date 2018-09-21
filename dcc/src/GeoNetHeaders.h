@@ -80,6 +80,11 @@ struct GeoNetHeaderCAM {
 	GeoNetTSB tsb;
 };
 
+struct GeoNetHeaderFCD {
+	GeoNetBasicHeader basicHeader;
+	GeoNetCommonHeader commonHeader;
+};
+
 struct GeoNetHeaderDENM {
 	GeoNetBasicHeader basicHeader;
 	GeoNetCommonHeader commonHeader;
@@ -99,6 +104,10 @@ struct GeoNetworkAndBTPHeaderCAM {
 struct GeoNetworkAndBTPHeaderDENM {
 	GeoNetHeaderDENM mGeoNetHdr;
 	BTPHeader mBTPHdr;
+};
+
+struct GeoNetworkAndBTPHeaderFCD {
+	GeoNetHeaderFCD mGeoNetHdr;
 };
 
 #endif /* GEONETHEADERS_H_ */

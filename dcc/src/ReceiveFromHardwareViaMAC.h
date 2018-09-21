@@ -86,6 +86,8 @@ private:
     int mLinkLayerLength = sizeof(struct ether_header);
     struct ether_header* mEth_hdr = (struct ether_header*) mPacket;;
     char* mPayload = mPacket + mLinkLayerLength;
+
+	void saveToFile(char* mVector);
 };
 
 /**
