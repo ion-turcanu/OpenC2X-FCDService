@@ -276,7 +276,8 @@ BEGIN
 	    spat(4),
 	    map(5),
 	    ivi(6),
-	    ev-rsr(7)
+	    ev-rsr(7),
+		fcd(8)
 	} (0..255),
 	stationID       StationID
     }

@@ -54,6 +54,7 @@ DCC::DCC(DccConfig &config, string globalConfig, string loggingConf, string stat
 
 	mReceiverFromCa = new CommunicationReceiver(module, "6666", "CAM", mGlobalConfig.mExpNo, loggingConf, statisticConf);
 	mReceiverFromDen = new CommunicationReceiver(module, "7777", "DENM", mGlobalConfig.mExpNo, loggingConf, statisticConf);
+	mReceiverFromFcd = new CommunicationReceiver(module, "2323", "FCD", mGlobalConfig.mExpNo, loggingConf, statisticConf);
 	mSenderToHw = new SendToHardwareViaMAC(module,mGlobalConfig.mEthernetDevice, mGlobalConfig.mExpNo, loggingConf, statisticConf);
 	mReceiverFromHw = new ReceiveFromHardwareViaMAC(module, mGlobalConfig.mExpNo, loggingConf, statisticConf);
 	mSenderToServices = new CommunicationSender(module, "5555", mGlobalConfig.mExpNo, loggingConf, statisticConf);
@@ -99,14 +100,19 @@ DCC::~DCC() {
 	//stop and delete threads
 	mThreadReceiveFromCa->join();
 	mThreadReceiveFromDen->join();
-	mThreadReceiveFromHw->join();
+	mThreadReceiveFromFcd->join();
+	mThreadReceiveFromHw2->join();
+	//mThreadReceiveFromHw->join();
 	delete mThreadReceiveFromCa;
 	delete mThreadReceiveFromDen;
-	delete mThreadReceiveFromHw;
+	delete mThreadReceiveFromFcd;
+	delete mThreadReceiveFromHw2;
+	//delete mThreadReceiveFromHw;
 
 	//delete sender and receiver
 	delete mReceiverFromCa;
 	delete mReceiverFromDen;
+	delete mReceiverFromFcd;
 	delete mReceiverFromHw;
 	delete mSenderToHw;
 	delete mSenderToServices;
@@ -148,7 +154,9 @@ void DCC::init() {
 	//create and start threads
 	mThreadReceiveFromCa = new boost::thread(&DCC::receiveFromCa2, this);
 	mThreadReceiveFromDen = new boost::thread(&DCC::receiveFromDen, this);
-	mThreadReceiveFromHw = new boost::thread(&DCC::receiveFromHw2, this);
+	mThreadReceiveFromFcd = new boost::thread(&DCC::receiveFromFcd, this);
+	mThreadReceiveFromHw2 = new boost::thread(&DCC::receiveFromHw2, this);
+	//mThreadReceiveFromHw = new boost::thread(&DCC::receiveFromHw, this);
 
 	//start timers
 	mTimerMeasureChannel->async_wait(mStrand.wrap(boost::bind(&DCC::measureChannel, this, boost::asio::placeholders::error)));
@@ -268,6 +276,38 @@ void DCC::receiveFromDen() {
 	}
 }
 
+void DCC::receiveFromFcd() {
+	string serializedData;		//serialized DATA
+	dataPackage::DATA* data;	//deserialized DATA
+	//mLogger->logInfo("[DCC] Received new FCD from FcdService");
+	//std::cout << "[DCC] Received new FCD from FcdService" << std::endl;
+
+	while (1) {
+		int64_t currTime = Utils::currentTime();
+		pair<string, string> received = mReceiverFromFcd->receive();
+		std::cout << "[DCC] Received new FCD from FcdService" << std::endl;
+		serializedData = received.second;
+
+		data = new dataPackage::DATA();
+		data->ParseFromString(serializedData);		//deserialize DATA
+
+		Channels::t_access_category ac = (Channels::t_access_category) 4; //AC_VI
+		int64_t nowTime = Utils::currentTime();
+		mBucket[ac]->flushQueue(nowTime);
+
+		mLogger->logInfo("");						//for readability
+		bool enqueued = mBucket[ac]->enqueue(data, data->validuntil());
+		//bool enqueued = mBucket[ac]->enqueue(serializedData, currTime + 2*1000*1000*1000);
+		if (enqueued) {
+			mLogger->logInfo("AC "+ to_string(ac) + ": received and enqueued FCD, queue length: " + to_string(mBucket[ac]->getQueuedPackets()));
+			sendQueuedPackets(ac);
+		}
+		else {
+			mLogger->logInfo("AC "+ to_string(ac) + ": received and dropped FCD, queue full -> length: " + to_string(mBucket[ac]->getQueuedPackets()));
+		}
+	}
+}
+
 void DCC::receiveFromHw() {
 	pair<string,string> receivedData;		//MAC Sender, serialized DATA
 	string* senderMac = &receivedData.first;
@@ -285,13 +325,26 @@ void DCC::receiveFromHw() {
 		}
 
 		data.ParseFromString(*serializedData);		//deserialize DATA
+		std::cout << "[DCC] Serialized data: " << *serializedData << std::endl;
+		std::cout << "[DCC] Serialized sender MAC: " << *senderMac << std::endl;
+		std::cout << "[DCC] Received Data Type: " << data.type() << std::endl;
+
+		if ((*serializedData).find("FCD") != string::npos) {
+			std::cout << "[DCC] Received new FCD from Hardware and send to FCDService" << std::endl;		
+			mSenderToServices->send("FCD", *serializedData);
+		}
+
 		//processing...
-		mLogger->logInfo("forward message from "+*senderMac +" from HW to services");
+		/*mLogger->logInfo("forward message from "+*senderMac +" from HW to services");
 		switch(data.type()) {								//send serialized DATA to corresponding module
 			case dataPackage::DATA_Type_CAM: 		mSenderToServices->send("CAM", *serializedData);	break;
 			case dataPackage::DATA_Type_DENM:		mSenderToServices->send("DENM", *serializedData);	break;
+			case dataPackage::DATA_Type_FCD:
+				std::cout << "[DCC] Received new FCD from Hardware and send to FCDService" << std::endl;		
+				mSenderToServices->send("FCD", *serializedData);	
+			break;
 			default:	break;
-		}
+		}*/
 	}
 }
 
@@ -544,7 +597,14 @@ void DCC::sendQueuedPackets(Channels::t_access_category ac) {
 
 			string byteMessage;
 			byteMessage = data->content();
-			mSenderToHw->sendWithGeoNet(&byteMessage, ac, data->type());
+			if (data->type()==dataPackage::DATA_Type_FCD){
+				mSenderToHw->send(&byteMessage, ac);
+				std::cout << "[DCC] Sending FCD to HW with send()" << std::endl;
+			}
+			else{
+				mSenderToHw->sendWithGeoNet(&byteMessage, ac, data->type());
+				std::cout << "[DCC] Sending CAM/DENM to HW with sendWithGeoNet()" << std::endl;
+			}
 			mLogger->logInfo("AC " + to_string(ac) + ": Sent data " + to_string(data->id()) + " to HW -> queue length: " + to_string(mBucket[ac]->getQueuedPackets()) + ", tokens: " + to_string(mBucket[ac]->availableTokens));
 			delete data;
 		}

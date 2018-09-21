@@ -38,11 +38,12 @@ class DATA;
 
 enum DATA_Type {
   DATA_Type_CAM = 1,
-  DATA_Type_DENM = 2
+  DATA_Type_DENM = 2,
+  DATA_Type_FCD = 3
 };
 bool DATA_Type_IsValid(int value);
 const DATA_Type DATA_Type_Type_MIN = DATA_Type_CAM;
-const DATA_Type DATA_Type_Type_MAX = DATA_Type_DENM;
+const DATA_Type DATA_Type_Type_MAX = DATA_Type_FCD;
 const int DATA_Type_Type_ARRAYSIZE = DATA_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DATA_Type_descriptor();
@@ -132,6 +133,7 @@ class DATA : public ::google::protobuf::Message {
   typedef DATA_Type Type;
   static const Type CAM = DATA_Type_CAM;
   static const Type DENM = DATA_Type_DENM;
+  static const Type FCD = DATA_Type_FCD;
   static inline bool Type_IsValid(int value) {
     return DATA_Type_IsValid(value);
   }

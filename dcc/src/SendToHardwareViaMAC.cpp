@@ -206,6 +206,11 @@ void SendToHardwareViaMAC::sendWithGeoNet(string* msg, int priority, int type) {
 			geoHdrLen = sizeof(struct GeoNetworkAndBTPHeaderCAM);
 			geoHdr = reinterpret_cast<uint8_t*>(&mGeoBtpHdrForCam);
 			break;
+		case dataPackage::DATA_Type_FCD:
+			fillGeoNetBTPheaderForCam(msg->size());
+			geoHdrLen = sizeof(struct GeoNetworkAndBTPHeaderCAM);
+			geoHdr = reinterpret_cast<uint8_t*>(&mGeoBtpHdrForCam);
+			break;
 		default:
 			mLogger->logError("Queued packet has invalid type: " + to_string(type));
 			break;
@@ -325,6 +330,10 @@ void SendToHardwareViaMAC::fillGeoNetBTPheaderForDenm(int payloadLen) {
 	//uint8_t* temp = reinterpret_cast<uint8_t*>(&mGeoBtpHdrForDenm);
 	//dumpBuffer(temp, sizeof(mGeoBtpHdrForDenm));
 }
+
+/*void SendToHardwareViaMAC::fillFcdHeader(int payloadLen) {
+
+}*/
 
 void SendToHardwareViaMAC::dumpBuffer(const uint8_t* buffer, int size) {
 	for (int i = 0; i < size; i++) {

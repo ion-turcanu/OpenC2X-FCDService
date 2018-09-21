@@ -89,14 +89,14 @@ void protobuf_AddDesc_data_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\ndata.proto\022\013dataPackage\"\210\002\n\004DATA\022\n\n\002id"
+    "\n\ndata.proto\022\013dataPackage\"\221\002\n\004DATA\022\n\n\002id"
     "\030\001 \002(\005\022$\n\004type\030\002 \002(\0162\026.dataPackage.DATA."
     "Type\022,\n\010priority\030\003 \002(\0162\032.dataPackage.DAT"
     "A.Priority\022\022\n\ncreateTime\030\004 \001(\003\022\022\n\nvalidU"
     "ntil\030\005 \001(\003\022\017\n\007txPower\030\006 \001(\001\022\017\n\007bitRate\030\007"
-    " \001(\001\022\017\n\007content\030\010 \002(\014\"\031\n\004Type\022\007\n\003CAM\020\001\022\010"
-    "\n\004DENM\020\002\"*\n\010Priority\022\006\n\002BK\020\001\022\006\n\002BE\020\000\022\006\n\002"
-    "VI\020\004\022\006\n\002VO\020\006", 292);
+    " \001(\001\022\017\n\007content\030\010 \002(\014\"\"\n\004Type\022\007\n\003CAM\020\001\022\010"
+    "\n\004DENM\020\002\022\007\n\003FCD\020\003\"*\n\010Priority\022\006\n\002BK\020\001\022\006\n"
+    "\002BE\020\000\022\006\n\002VI\020\004\022\006\n\002VO\020\006", 301);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "data.proto", &protobuf_RegisterTypes);
   DATA::default_instance_ = new DATA();
@@ -121,6 +121,7 @@ bool DATA_Type_IsValid(int value) {
   switch(value) {
     case 1:
     case 2:
+    case 3:
       return true;
     default:
       return false;
@@ -130,6 +131,7 @@ bool DATA_Type_IsValid(int value) {
 #ifndef _MSC_VER
 const DATA_Type DATA::CAM;
 const DATA_Type DATA::DENM;
+const DATA_Type DATA::FCD;
 const DATA_Type DATA::Type_MIN;
 const DATA_Type DATA::Type_MAX;
 const int DATA::Type_ARRAYSIZE;

@@ -31,7 +31,8 @@ typedef enum messageID {
 	messageID_spat	= 4,
 	messageID_map	= 5,
 	messageID_ivi	= 6,
-	messageID_ev_rsr	= 7
+	messageID_ev_rsr	= 7,
+	messageID_fcd	= 8
 } e_messageID;
 
 /* ItsPduHeader */

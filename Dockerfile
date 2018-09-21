@@ -36,6 +36,10 @@ RUN cd OpenC2X \
 #    && mkdir build \
 #    && cd build \
 #    && cmake ../ \
-#    && make
+#    && make  (
 
 WORKDIR /opt
+
+# Florian, are you watching me?
+# Yes Ion, I'm watching you ;-)
+# ahaha, great! 

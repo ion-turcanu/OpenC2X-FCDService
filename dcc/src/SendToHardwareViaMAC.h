@@ -112,6 +112,11 @@ private:
 	// Hard-coded for interoperability with Cohda MK5 box
 	struct GeoNetworkAndBTPHeaderCAM mGeoBtpHdrForCam;
 	struct GeoNetworkAndBTPHeaderDENM mGeoBtpHdrForDenm;
+
+	/*struct FcdHeader {
+		GeoNetHeaderDENM mGeoNetHdr;
+		BTPHeader mBTPHdr;
+	} mFcdHeader;*/
 };
 
 /**

@@ -19,6 +19,10 @@
 #include <common/asn1/CAM.h>
 #include <common/messages/MessageUtils.h>
 
+/**
+ * Class that handles the receiving, creating and sending of FCD Messages.
+ *
+ */
 
 class FcdService {
 
@@ -27,11 +31,12 @@ public:
     ~FcdService();
 
     void sendLoop();
-    void receive();
 
 private:
-    CommunicationSender*   mSenderToLdm;
-    CommunicationReceiver* mReceiverFromLdm;
+    void receive();
+
+    CommunicationSender*   mSenderToDcc;
+    CommunicationReceiver* mReceiverFromDcc;
     GlobalConfig           mGlobalConfig;
 
     boost::thread* mThreadSender;
