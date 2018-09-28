@@ -21,8 +21,8 @@ tmux new-window -t $SESSION:1 -n 'App'
 tmux split-window -h
 tmux select-pane -t 0
 
-#tmux send-keys "cd $BUILD_DIR/cam/src" C-m
-#tmux send-keys "./cam $GLOBAL_CONFIG $OPENC2X/cam/$LOCAL_CONFIG_RELATIVE $OPENC2X/cam/$LOGGING_CONF $OPENC2X/cam/$STATISTICS_CONF" C-m
+tmux send-keys "cd $BUILD_DIR/cam/src" C-m
+tmux send-keys "./cam $GLOBAL_CONFIG $OPENC2X/cam/$LOCAL_CONFIG_RELATIVE $OPENC2X/cam/$LOGGING_CONF $OPENC2X/cam/$STATISTICS_CONF" C-m
 tmux split-window -v
 
 tmux send-keys "cd $BUILD_DIR/httpServer/src" C-m
@@ -47,6 +47,10 @@ tmux split-window -v
 
 tmux send-keys "cd $BUILD_DIR/obd2/src" C-m
 tmux send-keys "./obd2 $GLOBAL_CONFIG $OPENC2X/obd2/$LOCAL_CONFIG_RELATIVE $OPENC2X/obd2/$LOGGING_CONF $OPENC2X/obd2/$STATISTICS_CONF" C-m
+tmux split-window -v
+
+tmux send-keys "cd $BUILD_DIR/fcd/src" C-m
+tmux send-keys "./fcd $GLOBAL_CONFIG $OPENC2X/fcd/$LOCAL_CONFIG_RELATIVE $OPENC2X/fcd/$LOGGING_CONF $OPENC2X/fcd/$STATISTICS_CONF" C-m
 tmux split-window -v
 
 tmux send-keys "cd $BUILD_DIR/gps/src" C-m

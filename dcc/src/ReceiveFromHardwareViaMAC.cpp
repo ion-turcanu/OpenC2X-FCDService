@@ -129,7 +129,6 @@ pair<ReceivedPacketInfo, string> ReceiveFromHardwareViaMAC::receiveWithGeoNetHea
 			return make_pair(info, msg);
 		} else if (geoNetPDU[5] == 42) {
 			// FCD
-			std::cout << "[RcvdFromHW] Received FCD from HW" << std::endl;
 			int denmPDULen = geoNetPDULen - sizeof(struct GeoNetworkAndBTPHeaderFCD);
 			char* denmPDU = geoNetPDU + sizeof(struct GeoNetworkAndBTPHeaderFCD);
 			string msg(denmPDU, denmPDULen);

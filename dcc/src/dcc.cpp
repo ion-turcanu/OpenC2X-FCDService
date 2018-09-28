@@ -280,12 +280,10 @@ void DCC::receiveFromFcd() {
 	string serializedData;		//serialized DATA
 	dataPackage::DATA* data;	//deserialized DATA
 	//mLogger->logInfo("[DCC] Received new FCD from FcdService");
-	//std::cout << "[DCC] Received new FCD from FcdService" << std::endl;
 
 	while (1) {
 		int64_t currTime = Utils::currentTime();
 		pair<string, string> received = mReceiverFromFcd->receive();
-		std::cout << "[DCC] Received new FCD from FcdService" << std::endl;
 		serializedData = received.second;
 
 		data = new dataPackage::DATA();
@@ -325,24 +323,13 @@ void DCC::receiveFromHw() {
 		}
 
 		data.ParseFromString(*serializedData);		//deserialize DATA
-		std::cout << "[DCC] Serialized data: " << *serializedData << std::endl;
-		std::cout << "[DCC] Serialized sender MAC: " << *senderMac << std::endl;
-		std::cout << "[DCC] Received Data Type: " << data.type() << std::endl;
-
-		/*if ((*serializedData).find("FCD") != string::npos) {
-			std::cout << "[DCC] Received new FCD from Hardware and send to FCDService" << std::endl;		
-			mSenderToServices->send("FCD", *serializedData);
-		}*/
 
 		//processing...
 		mLogger->logInfo("forward message from "+*senderMac +" from HW to services");
 		switch(data.type()) {								//send serialized DATA to corresponding module
 			case dataPackage::DATA_Type_CAM: 		mSenderToServices->send("CAM", *serializedData);	break;
 			case dataPackage::DATA_Type_DENM:		mSenderToServices->send("DENM", *serializedData);	break;
-			case dataPackage::DATA_Type_FCD:
-				std::cout << "[DCC] Received new FCD from Hardware and send to FCDService" << std::endl;		
-				mSenderToServices->send("FCD", *serializedData);	
-			break;
+			case dataPackage::DATA_Type_FCD:		mSenderToServices->send("FCD", *serializedData);	break;
 			default:	break;
 		}
 	}
@@ -603,7 +590,6 @@ void DCC::sendQueuedPackets(Channels::t_access_category ac) {
 			byteMessage = data->content();
 
 			mSenderToHw->sendWithGeoNet(&byteMessage, ac, data->type());
-			std::cout << "[DCC] Sending " << to_string(data->type()) << " to HW with sendWithGeoNet()" << std::endl;
 			mLogger->logInfo("AC " + to_string(ac) + ": Sent data " + to_string(data->id()) + " to HW -> queue length: " + to_string(mBucket[ac]->getQueuedPackets()) + ", tokens: " + to_string(mBucket[ac]->availableTokens));
 			delete data;
 		}

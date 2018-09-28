@@ -11,13 +11,15 @@ INITIALIZE_EASYLOGGINGPP
 
 using namespace std;
 
-FcdService::FcdService(string globalConfig, string logConf, string statConf) {
+FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string logConf, string statConf) {
     try {
         mGlobalConfig.loadConfigXML(globalConfig);
     }
     catch (std::exception &e) {
         cerr << "Error while loading config.xml: " << e.what() << endl;
     }
+
+    mConfig = config;
 
     // Logging
     mLogger = new LoggingUtility("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
@@ -27,12 +29,16 @@ FcdService::FcdService(string globalConfig, string logConf, string statConf) {
     mSenderToDcc     = new CommunicationSender("FcdService", "2323", mGlobalConfig.mExpNo, logConf, statConf);
 
     // Start the threads
-    mThreadSender   = new boost::thread(&FcdService::sendLoop, this);
+    if (mConfig.mIsRSU){
+        mThreadSender   = new boost::thread(&FcdService::sendLoop, this);
+    }
     mThreadReceiver = new boost::thread(&FcdService::receive, this);
 }
 
 FcdService::~FcdService() {
-    mThreadSender->join();
+    if (mConfig.mIsRSU){
+        mThreadSender->join();
+    }
     mThreadReceiver->join();
 
     delete mThreadSender;
@@ -42,8 +48,6 @@ FcdService::~FcdService() {
     delete mSenderToDcc;
 
     delete mLogger;
-
-    cout << "~FcdService" << endl;
 }
 
 void FcdService::sendLoop() {
@@ -61,17 +65,19 @@ void FcdService::sendLoop() {
         int64_t currTime = Utils::currentTime();
         data.set_createtime(currTime);
         data.set_validuntil(currTime + 2*1000*1000*1000);
-        data.set_content("FCD" + to_string(counter));
+        string myContent = "FCD" + to_string(counter);
+        data.set_content(myContent);
 
         data.SerializeToString(&serializedData);
 
         // Send message
         mSenderToDcc->send("FCD", serializedData);
-        counter++;
 
-        // Wait for one second
-        boost::this_thread::sleep(boost::posix_time::seconds(1));
-        std::cout << "[FCD] Sending FCD out: " << std::endl;
+        // Wait for txInterval seconds
+        boost::this_thread::sleep(boost::posix_time::seconds(mConfig.mTxInterval));
+        mLogger->logInfo("Sending FCD out: " + myContent);
+        
+        counter++;
     }
 }
 
@@ -84,19 +90,27 @@ void FcdService::receive() {
         env = received.first;
         str = received.second;
 
-        //mLogger->logInfo("Incoming FCD: " + str);
-        std::cout << "[FCD] Incoming FCD: " << str << std::endl;
+        mLogger->logInfo("Incoming FCD: " + str);
     }
 }
 
 int main(int argc, const char* argv[]) {
 
-    if(argc != 4) {
-        fprintf(stderr, "missing arguments: %s <globalConfig.xml> <logging.conf> <statistics.conf> \n", argv[0]);
+    if(argc != 5) {
+        fprintf(stderr, "missing arguments: %s <globalConfig.xml> <fcdConfig.xml> <logging.conf> <statistics.conf> \n", argv[0]);
         exit(1);
     }
 
-    FcdService fcd(argv[1], argv[2], argv[3]);
+    FcdServiceConfig config;
+	try {
+		config.loadConfigXML(argv[2]);
+	}
+	catch (std::exception &e) {
+		cerr << "Error while loading config.xml: " << e.what() << endl << flush;
+		return EXIT_FAILURE;
+	}
+
+    FcdService fcd(config, argv[1], argv[3], argv[4]);
     
     return EXIT_SUCCESS;
 }
