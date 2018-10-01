@@ -1,0 +1,9 @@
+message FCDBasicHeader {
+	// this proto ignores optional fields in standard at the moment
+	required string magicBytes = 1;
+	required uint32 version = 2;
+	required uint32 reserved = 3;
+	required uint32 m_type = 4;
+	required uint32 source = 5;
+	required uint32 request_id = 6;
+}

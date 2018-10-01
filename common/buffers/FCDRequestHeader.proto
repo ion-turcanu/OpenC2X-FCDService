@@ -1,0 +1,5 @@
+
+message FCDRequestHeader {
+	// this proto ignores optional fields in standard at the moment
+	required uint64 stationID = 1;
+}

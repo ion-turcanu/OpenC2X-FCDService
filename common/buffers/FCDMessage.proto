@@ -1,0 +1,6 @@
+import "FCDBasicHeader.proto";
+
+message FCDMessage {
+	// this proto ignores optional fields in standard at the moment
+    required FCDBasicHeader basicHeader = 1;
+}
