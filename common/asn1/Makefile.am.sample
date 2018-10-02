@@ -28,6 +28,9 @@ ASN_MODULE_SOURCES=	\
 	SafetyCarContainer.c	\
 	RSUContainerHighFrequency.c	\
 	GenerationDeltaTime.c	\
+	FCDBasicHeader.c	\
+	SourceID.c	\
+	RequestID.c	\
 	ItsPduHeader.c	\
 	StationID.c	\
 	ReferencePosition.c	\
@@ -191,6 +194,9 @@ ASN_MODULE_HEADERS=	\
 	SafetyCarContainer.h	\
 	RSUContainerHighFrequency.h	\
 	GenerationDeltaTime.h	\
+	FCDBasicHeader.h	\
+	SourceID.h	\
+	RequestID.h	\
 	ItsPduHeader.h	\
 	StationID.h	\
 	ReferencePosition.h	\

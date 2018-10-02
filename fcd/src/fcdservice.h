@@ -16,7 +16,7 @@
 #include <common/buffers/build/CoopAwareness.pb.h>
 #include <common/buffers/build/ItsPduHeader.pb.h>
 #include <mutex>
-#include <common/asn1/CAM.h> //TODO: a dedicated FCD message has to be defined and the FCD.h header should be included here
+#include <common/asn1/FCDBasciHeader.h>
 #include <common/messages/MessageUtils.h>
 
 

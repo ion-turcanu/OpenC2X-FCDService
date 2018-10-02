@@ -1,5 +1,12 @@
+package fcdPackage;
 
 message FCDRequestHeader {
 	// this proto ignores optional fields in standard at the moment
-	required uint64 stationID = 1;
+	required uint32 d_max = 1;
+	required uint32 h_max = 2;
+	required uint32 h_cur = 3;
+	required uint32 t_max_req = 4;
+	required uint32 t_max_rep = 5;
+	required uint32 latitude = 6;
+	required uint32 longitude = 7;
 }

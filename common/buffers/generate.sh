@@ -50,4 +50,8 @@ protoc --proto_path=./ --cpp_out=build/ DENMManagementContainer.proto
 
 protoc --proto_path=./ --cpp_out=build/ denm.proto
 
-protoc --proto_path=./ --cpp_out=build/ FCDMessage.proto
+protoc --proto_path=./ --cpp_out=build/ request.proto
+
+protoc --proto_path=./ --cpp_out=build/ FCDBasicHeader.proto
+
+protoc --proto_path=./ --cpp_out=build/ FCDRequestHeader.proto

@@ -1,6 +1,11 @@
+package fcdPackage;
 import "FCDBasicHeader.proto";
+import "FCDRequestHeader.proto";
 
-message FCDMessage {
+
+message FCDRequest {
 	// this proto ignores optional fields in standard at the moment
     required FCDBasicHeader basicHeader = 1;
+    required FCDRequestHeader requestHeader = 2;
+
 }

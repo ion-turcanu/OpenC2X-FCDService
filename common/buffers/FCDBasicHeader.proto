@@ -1,3 +1,5 @@
+package fcdPackage;
+
 message FCDBasicHeader {
 	// this proto ignores optional fields in standard at the moment
 	required string magicBytes = 1;

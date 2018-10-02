@@ -58,7 +58,7 @@ void FcdService::sendLoop() {
         string serializedData;
         dataPackage::DATA data;
 
-        data.set_id(messageID_fcd);
+        data.set_id(messageID_request);
         data.set_type(dataPackage::DATA_Type_FCD);
         data.set_priority(dataPackage::DATA_Priority_VI);
 
