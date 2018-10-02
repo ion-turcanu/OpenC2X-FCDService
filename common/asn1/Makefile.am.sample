@@ -29,8 +29,13 @@ ASN_MODULE_SOURCES=	\
 	RSUContainerHighFrequency.c	\
 	GenerationDeltaTime.c	\
 	FCDBasicHeader.c	\
+	FCDRequestHeader.c	\
 	SourceID.c	\
 	RequestID.c	\
+	GenerationTime.c	\
+	Long.c	\
+	Lat.c	\
+	FCDRequest.c	\
 	ItsPduHeader.c	\
 	StationID.c	\
 	ReferencePosition.c	\
@@ -195,8 +200,13 @@ ASN_MODULE_HEADERS=	\
 	RSUContainerHighFrequency.h	\
 	GenerationDeltaTime.h	\
 	FCDBasicHeader.h	\
+	FCDRequestHeader.h	\
 	SourceID.h	\
 	RequestID.h	\
+	GenerationTime.h	\
+	Long.h	\
+	Lat.h	\
+	FCDRequest.h	\
 	ItsPduHeader.h	\
 	StationID.h	\
 	ReferencePosition.h	\

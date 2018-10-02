@@ -243,14 +243,14 @@ static ber_tlv_tag_t asn_DEF_DangerousGoodsExtended_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_DangerousGoodsExtended_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* dangerousGoodsType at 908 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* unNumber at 909 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* elevatedTemperature at 910 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 }, /* tunnelsRestricted at 911 */
-    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 }, /* limitedQuantity at 912 */
-    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 5, 0, 0 }, /* emergencyActionCode at 913 */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 6, 0, 0 }, /* phoneNumber at 914 */
-    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 7, 0, 0 } /* companyName at 915 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* dangerousGoodsType at 940 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* unNumber at 941 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* elevatedTemperature at 942 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 }, /* tunnelsRestricted at 943 */
+    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 }, /* limitedQuantity at 944 */
+    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 5, 0, 0 }, /* emergencyActionCode at 945 */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 6, 0, 0 }, /* phoneNumber at 946 */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 7, 0, 0 } /* companyName at 947 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_DangerousGoodsExtended_specs_1 = {
 	sizeof(struct DangerousGoodsExtended),

@@ -6,7 +6,8 @@ struct asn_TYPE_descriptor_s;	/* Forward declaration */
 
 extern struct asn_TYPE_descriptor_s asn_DEF_DENM;
 extern struct asn_TYPE_descriptor_s asn_DEF_CAM;
-extern struct asn_TYPE_descriptor_s asn_DEF_FCDBasicHeader;
+extern struct asn_TYPE_descriptor_s asn_DEF_GenerationTime;
+extern struct asn_TYPE_descriptor_s asn_DEF_FCDRequest;
 extern struct asn_TYPE_descriptor_s asn_DEF_TrafficConditionSubCauseCode;
 extern struct asn_TYPE_descriptor_s asn_DEF_AccidentSubCauseCode;
 extern struct asn_TYPE_descriptor_s asn_DEF_HumanPresenceOnTheRoadSubCauseCode;
@@ -38,7 +39,8 @@ struct asn_TYPE_descriptor_s *asn_pdu_collection[] = {
 	/* From module CAM-PDU-Descriptions in its_facilities_pdu_all.asn */
 	&asn_DEF_CAM,	
 	/* From module FCD-PDU-Descriptions in its_facilities_pdu_all.asn */
-	&asn_DEF_FCDBasicHeader,	
+	&asn_DEF_GenerationTime,	
+	&asn_DEF_FCDRequest,	
 	/* From module ITS-Container in its_facilities_pdu_all.asn */
 	&asn_DEF_TrafficConditionSubCauseCode,	
 	&asn_DEF_AccidentSubCauseCode,	

@@ -17,6 +17,8 @@
 #include <common/buffers/build/ItsPduHeader.pb.h>
 #include <mutex>
 #include <common/asn1/FCDBasicHeader.h>
+#include <common/asn1/FCDRequestHeader.h>
+#include <common/asn1/FCDRequest.h>
 #include <common/messages/MessageUtils.h>
 
 
@@ -60,9 +62,12 @@ public:
 private:
     void receive();
 
+	FCDRequest_t* generateFcd(int reqId);
+
     CommunicationSender*   mSenderToDcc;
     CommunicationReceiver* mReceiverFromDcc;
     GlobalConfig           mGlobalConfig;
+	MessageUtils*	mMsgUtils;
 
     boost::thread* mThreadSender;
     boost::thread* mThreadReceiver;

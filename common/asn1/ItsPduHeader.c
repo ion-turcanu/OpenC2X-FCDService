@@ -100,9 +100,9 @@ static ber_tlv_tag_t asn_DEF_ItsPduHeader_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_ItsPduHeader_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* protocolVersion at 311 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* messageID at 314 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 } /* stationID at 324 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* protocolVersion at 343 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* messageID at 346 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 } /* stationID at 356 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_ItsPduHeader_specs_1 = {
 	sizeof(struct ItsPduHeader),

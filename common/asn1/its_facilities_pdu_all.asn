@@ -294,9 +294,41 @@ BEGIN
 	requestID	RequestID
     }
 
+	FCDRequestHeader ::= SEQUENCE {
+	dMax INTEGER {} (0..65536),
+	hMax INTEGER {} (0..255),
+	hCur INTEGER {} (0..255),
+	tMaxReq	INTEGER {} (0..4294967295),
+	tMaxRep	INTEGER {} (0..4294967295),
+	lat	Lat,
+	long Long
+	--generationTime	GenerationTime
+    }
+
 	SourceID ::= INTEGER (0..4294967295)
 
 	RequestID ::= INTEGER (0..65536)
+
+	GenerationTime ::= INTEGER {
+	oneMilliSec(1)
+    } (0..65535)
+
+	Long ::= INTEGER {
+	oneMicrodegreeEast(10),
+	oneMicrodegreeWest(-10),
+	unavailable(1800000001)
+    } (-1800000000..1800000001)
+    
+    Lat ::= INTEGER {
+	oneMicrodegreeNorth(10),
+	oneMicrodegreeSouth(-10),
+	unavailable(900000001)
+    } (-900000000..900000001)
+
+	FCDRequest ::= SEQUENCE {
+	fcdBasicHeader	FCDBasicHeader,
+	fcdRequestHeader	FCDRequestHeader
+    }
 
 END
 
