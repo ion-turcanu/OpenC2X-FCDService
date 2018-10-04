@@ -5,10 +5,10 @@
  * 	`asn1c -fnative-types -gen-PER`
  */
 
-#include "FCDRequest.h"
+#include "FCDREQ.h"
 
-static asn_TYPE_member_t asn_MBR_FCDRequest_1[] = {
-	{ ATF_NOFLAGS, 0, offsetof(struct FCDRequest, fcdBasicHeader),
+static asn_TYPE_member_t asn_MBR_FCDREQ_1[] = {
+	{ ATF_NOFLAGS, 0, offsetof(struct FCDREQ, fcdBasicHeader),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_FCDBasicHeader,
@@ -17,7 +17,7 @@ static asn_TYPE_member_t asn_MBR_FCDRequest_1[] = {
 		0,
 		"fcdBasicHeader"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct FCDRequest, fcdRequestHeader),
+	{ ATF_NOFLAGS, 0, offsetof(struct FCDREQ, fcdRequestHeader),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_FCDRequestHeader,
@@ -27,25 +27,25 @@ static asn_TYPE_member_t asn_MBR_FCDRequest_1[] = {
 		"fcdRequestHeader"
 		},
 };
-static ber_tlv_tag_t asn_DEF_FCDRequest_tags_1[] = {
+static ber_tlv_tag_t asn_DEF_FCDREQ_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
-static asn_TYPE_tag2member_t asn_MAP_FCDRequest_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* fcdBasicHeader at 329 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* fcdRequestHeader at 331 */
+static asn_TYPE_tag2member_t asn_MAP_FCDREQ_tag2el_1[] = {
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* fcdBasicHeader at 286 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* fcdRequestHeader at 288 */
 };
-static asn_SEQUENCE_specifics_t asn_SPC_FCDRequest_specs_1 = {
-	sizeof(struct FCDRequest),
-	offsetof(struct FCDRequest, _asn_ctx),
-	asn_MAP_FCDRequest_tag2el_1,
+static asn_SEQUENCE_specifics_t asn_SPC_FCDREQ_specs_1 = {
+	sizeof(struct FCDREQ),
+	offsetof(struct FCDREQ, _asn_ctx),
+	asn_MAP_FCDREQ_tag2el_1,
 	2,	/* Count of tags in the map */
 	0, 0, 0,	/* Optional elements (not needed) */
 	-1,	/* Start extensions */
 	-1	/* Stop extensions */
 };
-asn_TYPE_descriptor_t asn_DEF_FCDRequest = {
-	"FCDRequest",
-	"FCDRequest",
+asn_TYPE_descriptor_t asn_DEF_FCDREQ = {
+	"FCDREQ",
+	"FCDREQ",
 	SEQUENCE_free,
 	SEQUENCE_print,
 	SEQUENCE_constraint,
@@ -56,15 +56,15 @@ asn_TYPE_descriptor_t asn_DEF_FCDRequest = {
 	SEQUENCE_decode_uper,
 	SEQUENCE_encode_uper,
 	0,	/* Use generic outmost tag fetcher */
-	asn_DEF_FCDRequest_tags_1,
-	sizeof(asn_DEF_FCDRequest_tags_1)
-		/sizeof(asn_DEF_FCDRequest_tags_1[0]), /* 1 */
-	asn_DEF_FCDRequest_tags_1,	/* Same as above */
-	sizeof(asn_DEF_FCDRequest_tags_1)
-		/sizeof(asn_DEF_FCDRequest_tags_1[0]), /* 1 */
+	asn_DEF_FCDREQ_tags_1,
+	sizeof(asn_DEF_FCDREQ_tags_1)
+		/sizeof(asn_DEF_FCDREQ_tags_1[0]), /* 1 */
+	asn_DEF_FCDREQ_tags_1,	/* Same as above */
+	sizeof(asn_DEF_FCDREQ_tags_1)
+		/sizeof(asn_DEF_FCDREQ_tags_1[0]), /* 1 */
 	0,	/* No PER visible constraints */
-	asn_MBR_FCDRequest_1,
+	asn_MBR_FCDREQ_1,
 	2,	/* Elements count */
-	&asn_SPC_FCDRequest_specs_1	/* Additional specs */
+	&asn_SPC_FCDREQ_specs_1	/* Additional specs */
 };
 

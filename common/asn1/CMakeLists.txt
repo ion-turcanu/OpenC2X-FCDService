@@ -160,6 +160,10 @@ set(asn1_SRCS
 	ProtectedZoneRadius.c	
 	ProtectedZoneID.c	
 	CenDsrcTollingZoneID.c
+	FCDREQ.c
+	FCDBasicHeader.c
+	FCDRequestHeader.c
+	RequestID.c
 )
 
 set(asn1_support_SRCS

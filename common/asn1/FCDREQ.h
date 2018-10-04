@@ -5,8 +5,8 @@
  * 	`asn1c -fnative-types -gen-PER`
  */
 
-#ifndef	_FCDRequest_H_
-#define	_FCDRequest_H_
+#ifndef	_FCDREQ_H_
+#define	_FCDREQ_H_
 
 
 #include <asn_application.h>
@@ -20,21 +20,21 @@
 extern "C" {
 #endif
 
-/* FCDRequest */
-typedef struct FCDRequest {
+/* FCDREQ */
+typedef struct FCDREQ {
 	FCDBasicHeader_t	 fcdBasicHeader;
 	FCDRequestHeader_t	 fcdRequestHeader;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
-} FCDRequest_t;
+} FCDREQ_t;
 
 /* Implementation */
-extern asn_TYPE_descriptor_t asn_DEF_FCDRequest;
+extern asn_TYPE_descriptor_t asn_DEF_FCDREQ;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif	/* _FCDRequest_H_ */
+#endif	/* _FCDREQ_H_ */
 #include <asn_internal.h>

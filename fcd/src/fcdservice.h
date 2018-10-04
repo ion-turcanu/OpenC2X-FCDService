@@ -2,23 +2,24 @@
 #define FCDSERVICE_H
 
 #include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
 #include <common/config/config.h>
 #include <common/utility/CommunicationReceiver.h>
 #include <common/utility/CommunicationSender.h>
 #include <common/buffers/build/data.pb.h>
-#include <common/buffers/build/cam.pb.h>
+//#include <common/buffers/build/cam.pb.h>
 #include <common/buffers/build/gps.pb.h>
 #include <common/buffers/build/obd2.pb.h>
-#include <common/buffers/build/camInfo.pb.h>
-#include <common/buffers/build/CoopAwareness.pb.h>
-#include <common/buffers/build/ItsPduHeader.pb.h>
+#include <common/buffers/build/request.pb.h>
+//#include <common/buffers/build/camInfo.pb.h>
+//#include <common/buffers/build/CoopAwareness.pb.h>
+//#include <common/buffers/build/ItsPduHeader.pb.h>
+#include <boost/asio.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 #include <mutex>
-#include <common/asn1/FCDBasicHeader.h>
-#include <common/asn1/FCDRequestHeader.h>
-#include <common/asn1/FCDRequest.h>
+//#include <common/asn1/FCDBasicHeader.h>
+//#include <common/asn1/FCDRequestHeader.h>
+#include <common/asn1/FCDREQ.h>
 #include <common/messages/MessageUtils.h>
 
 
@@ -62,7 +63,7 @@ public:
 private:
     void receive();
 
-	FCDRequest_t* generateFcd(int reqId);
+	FCDREQ_t* generateFcd(int reqId);
 
     CommunicationSender*   mSenderToDcc;
     CommunicationReceiver* mReceiverFromDcc;

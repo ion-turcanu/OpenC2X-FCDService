@@ -6,6 +6,12 @@
 #include <iostream>
 #include <string>
 #include <common/utility/Utils.h>
+#include <google/protobuf/text_format.h>
+#include <unistd.h>
+#include <ctime>
+#include <chrono>
+#include <cmath>
+#include <common/asn1/per_encoder.h>
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -58,11 +64,11 @@ void FcdService::sendLoop() {
         string serializedData;
         dataPackage::DATA data;
 
-        FCDRequest_t* fcdReq = generateFcd(counter);
-        vector<uint8_t> encodedFcd = mMsgUtils->encodeMessage(&asn_DEF_FCDRequest, fcdReq);
+        FCDREQ_t* fcdReq = generateFcd(counter);
+        vector<uint8_t> encodedFcd = mMsgUtils->encodeMessage(&asn_DEF_FCDREQ, fcdReq);
         string strFcd(encodedFcd.begin(), encodedFcd.end());
 	    mLogger->logDebug("Encoded FCDRequest size: " + to_string(strFcd.length()));
-
+        
         data.set_id(messageID_request);
         data.set_type(dataPackage::DATA_Type_FCD);
         data.set_priority(dataPackage::DATA_Priority_VI);
@@ -94,8 +100,8 @@ void FcdService::receive() {
         envelope = received.first;
         serializedAsnFcd = received.second;
 
-        FCDRequest_t* fcdReq = 0;
-		int res = mMsgUtils->decodeMessage(&asn_DEF_FCDRequest, (void **)&fcdReq, serializedAsnFcd);
+        FCDREQ_t* fcdReq = 0;
+		int res = mMsgUtils->decodeMessage(&asn_DEF_FCDREQ, (void **)&fcdReq, serializedAsnFcd);
 		if (res != 0) {
 			mLogger->logError("Failed to decode received FCDRequest. Error code: " + to_string(res));
 			continue;
@@ -105,29 +111,37 @@ void FcdService::receive() {
     }
 }
 
-FCDRequest_t* FcdService::generateFcd(int reqId) {
+FCDREQ_t* FcdService::generateFcd(int reqId) {
     mLogger->logDebug("Generating FCDRequest");
-	FCDRequest_t* fcdReq = static_cast<FCDRequest_t*>(calloc(1, sizeof(FCDRequest_t)));
+	FCDREQ_t* fcdReq = static_cast<FCDREQ_t*>(calloc(1, sizeof(FCDREQ_t)));
 	if (!fcdReq) {
 		throw runtime_error("could not allocate CAM_t");
 	}
+
+    int64_t currTime = Utils::currentTime();
+    // Seems like ASN1 supports 32 bit int (strange) and timestamp needs 42 bits.
+	TimestampIts_t* timestamp = static_cast<TimestampIts_t*>(calloc(1, sizeof(TimestampIts_t)));
+	timestamp->buf = static_cast<uint8_t*>(calloc(6, 1)); // timestamp needs 42 bits in standard
+	timestamp->bits_unused = 6;
+	timestamp->size = 6;
+	memcpy(timestamp->buf, &currTime, 6);
 
     // FCD basic header
     fcdReq->fcdBasicHeader.messageID = messageID_request;
     fcdReq->fcdBasicHeader.protocolVersion = protocolVersion_currentVersion;
     fcdReq->fcdBasicHeader.requestID = reqId;
     fcdReq->fcdBasicHeader.reserved = 0; //TODO: check this value
-    fcdReq->fcdBasicHeader.sourceID = mGlobalConfig.mStationID;
+    fcdReq->fcdBasicHeader.stationID = mGlobalConfig.mStationID;
 
     // FCD request header
     fcdReq->fcdRequestHeader.dMax = 200;
     fcdReq->fcdRequestHeader.hCur = 0;
     fcdReq->fcdRequestHeader.hMax = 4;
-    fcdReq->fcdRequestHeader.lat = 180;
-    fcdReq->fcdRequestHeader.Long = 90;
+    fcdReq->fcdRequestHeader.latitude = 180;
+    fcdReq->fcdRequestHeader.longitude = 90;
     fcdReq->fcdRequestHeader.tMaxRep = 1000; // in milliseconds
     fcdReq->fcdRequestHeader.tMaxReq = 100; // in milliseconds
-    //TODO: add timestamp
+    fcdReq->fcdRequestHeader.generationTime = *timestamp;
 }
 
 int main(int argc, const char* argv[]) {

@@ -13,7 +13,7 @@
 
 /* Including external dependencies */
 #include <NativeInteger.h>
-#include "SourceID.h"
+#include "StationID.h"
 #include "RequestID.h"
 #include <constr_SEQUENCE.h>
 
@@ -35,7 +35,7 @@ typedef struct FCDBasicHeader {
 	long	 protocolVersion;
 	long	 reserved;
 	long	 messageID;
-	SourceID_t	 sourceID;
+	StationID_t	 stationID;
 	RequestID_t	 requestID;
 	
 	/* Context for parsing across buffer boundaries */

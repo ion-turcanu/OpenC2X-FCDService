@@ -13,8 +13,9 @@
 
 /* Including external dependencies */
 #include <NativeInteger.h>
-#include "Lat.h"
-#include "Long.h"
+#include "Longitude.h"
+#include "Latitude.h"
+#include "TimestampIts.h"
 #include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
@@ -28,8 +29,9 @@ typedef struct FCDRequestHeader {
 	long	 hCur;
 	unsigned long	 tMaxReq;
 	unsigned long	 tMaxRep;
-	Lat_t	 lat;
-	Long_t	 Long;
+	Longitude_t	 longitude;
+	Latitude_t	 latitude;
+	TimestampIts_t	 generationTime;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
