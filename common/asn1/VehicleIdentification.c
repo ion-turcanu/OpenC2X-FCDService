@@ -32,8 +32,8 @@ static ber_tlv_tag_t asn_DEF_VehicleIdentification_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_VehicleIdentification_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* wMInumber at 1044 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* vDS at 1045 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* wMInumber at 1045 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* vDS at 1046 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_VehicleIdentification_specs_1 = {
 	sizeof(struct VehicleIdentification),

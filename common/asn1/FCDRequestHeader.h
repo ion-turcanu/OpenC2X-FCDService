@@ -15,6 +15,7 @@
 #include <NativeInteger.h>
 #include "Longitude.h"
 #include "Latitude.h"
+#include "Altitude.h"
 #include "TimestampIts.h"
 #include <constr_SEQUENCE.h>
 
@@ -31,6 +32,7 @@ typedef struct FCDRequestHeader {
 	unsigned long	 tMaxRep;
 	Longitude_t	 longitude;
 	Latitude_t	 latitude;
+	Altitude_t	 altitude;
 	TimestampIts_t	 generationTime;
 	
 	/* Context for parsing across buffer boundaries */

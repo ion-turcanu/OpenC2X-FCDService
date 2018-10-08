@@ -473,8 +473,17 @@ static asn_TYPE_member_t asn_MBR_FCDRequestHeader_1[] = {
 		0,
 		"latitude"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct FCDRequestHeader, generationTime),
+	{ ATF_NOFLAGS, 0, offsetof(struct FCDRequestHeader, altitude),
 		(ASN_TAG_CLASS_CONTEXT | (7 << 2)),
+		-1,	/* IMPLICIT tag at current level */
+		&asn_DEF_Altitude,
+		0,	/* Defer constraints checking to the member type */
+		0,	/* No PER visible constraints */
+		0,
+		"altitude"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct FCDRequestHeader, generationTime),
+		(ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_TimestampIts,
 		0,	/* Defer constraints checking to the member type */
@@ -494,13 +503,14 @@ static asn_TYPE_tag2member_t asn_MAP_FCDRequestHeader_tag2el_1[] = {
     { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 }, /* tMaxRep at 308 */
     { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 5, 0, 0 }, /* longitude at 309 */
     { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 6, 0, 0 }, /* latitude at 310 */
-    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 7, 0, 0 } /* generationTime at 312 */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 7, 0, 0 }, /* altitude at 311 */
+    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 8, 0, 0 } /* generationTime at 313 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_FCDRequestHeader_specs_1 = {
 	sizeof(struct FCDRequestHeader),
 	offsetof(struct FCDRequestHeader, _asn_ctx),
 	asn_MAP_FCDRequestHeader_tag2el_1,
-	8,	/* Count of tags in the map */
+	9,	/* Count of tags in the map */
 	0, 0, 0,	/* Optional elements (not needed) */
 	-1,	/* Start extensions */
 	-1	/* Stop extensions */
@@ -526,7 +536,7 @@ asn_TYPE_descriptor_t asn_DEF_FCDRequestHeader = {
 		/sizeof(asn_DEF_FCDRequestHeader_tags_1[0]), /* 1 */
 	0,	/* No PER visible constraints */
 	asn_MBR_FCDRequestHeader_1,
-	8,	/* Elements count */
+	9,	/* Elements count */
 	&asn_SPC_FCDRequestHeader_specs_1	/* Additional specs */
 };
 

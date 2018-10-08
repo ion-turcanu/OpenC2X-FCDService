@@ -35,12 +35,16 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     // Sender and Receiver
     mReceiverFromDcc = new CommunicationReceiver("FcdService", "5555", "FCD", mGlobalConfig.mExpNo, logConf, statConf);
     mSenderToDcc     = new CommunicationSender("FcdService", "2323", mGlobalConfig.mExpNo, logConf, statConf);
+    mReceiverGps = new CommunicationReceiver("FcdService", "3333", "GPS", mGlobalConfig.mExpNo, logConf, statConf);
+	mReceiverObd2 = new CommunicationReceiver("FcdService", "2222", "OBD2", mGlobalConfig.mExpNo, logConf, statConf);
 
     // Start the threads
     if (mConfig.mIsRSU){
         mThreadSender   = new boost::thread(&FcdService::sendLoop, this);
     }
     mThreadReceiver = new boost::thread(&FcdService::receive, this);
+    mThreadGpsDataReceive = new boost::thread(&FcdService::receiveGpsData, this);
+	mThreadObd2DataReceive = new boost::thread(&FcdService::receiveObd2Data, this);
 }
 
 FcdService::~FcdService() {
@@ -48,12 +52,18 @@ FcdService::~FcdService() {
         mThreadSender->join();
     }
     mThreadReceiver->join();
+    mThreadGpsDataReceive->join();
+	mThreadObd2DataReceive->join();
 
     delete mThreadSender;
     delete mThreadReceiver;
+    delete mThreadGpsDataReceive;
+	delete mThreadObd2DataReceive;
 
     delete mReceiverFromDcc;
     delete mSenderToDcc;
+    delete mReceiverGps;
+	delete mReceiverObd2;
 
     delete mLogger;
     delete mMsgUtils;
@@ -86,9 +96,10 @@ void FcdService::sendLoop() {
         // Send message
         mSenderToDcc->send("FCD", serializedData);
 
+        cout << "Sending FCD out with ReqID: " << to_string(fcdReq->fcdBasicHeader.requestID) << endl;
+
         // Wait for txInterval seconds
         boost::this_thread::sleep(boost::posix_time::seconds(mConfig.mTxInterval));
-        cout << "Sending FCD out: " << strFcd << endl;
         
         counter++;
     }
@@ -110,8 +121,36 @@ void FcdService::receive() {
 			continue;
 		}
         
-        cout << "Incoming FCD: " << serializedAsnFcd << endl;
+        cout << "Incoming FCD with ReqID: " << to_string(fcdReq->fcdBasicHeader.requestID) << endl;
     }
+}
+
+void FcdService::receiveGpsData() {
+	string serializedGps;
+	gpsPackage::GPS newGps;
+
+	while (1) {
+		serializedGps = mReceiverGps->receiveData();
+		newGps.ParseFromString(serializedGps);
+		mLogger->logDebug("Received GPS with latitude: " + to_string(newGps.latitude()) + ", longitude: " + to_string(newGps.longitude()));
+		mMutexLatestGps.lock();
+		mLatestGps = newGps;
+		mMutexLatestGps.unlock();
+	}
+}
+
+void FcdService::receiveObd2Data() {
+	string serializedObd2;
+	obd2Package::OBD2 newObd2;
+
+	while (1) {
+		serializedObd2 = mReceiverObd2->receiveData();
+		newObd2.ParseFromString(serializedObd2);
+		mLogger->logDebug("Received OBD2 with speed (m/s): " + to_string(newObd2.speed()));
+		mMutexLatestObd2.lock();
+		mLatestObd2 = newObd2;
+		mMutexLatestObd2.unlock();
+	}
 }
 
 FCDREQ_t* FcdService::generateFcd(int reqId) {
@@ -137,13 +176,22 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
     fcdReq->fcdBasicHeader.stationID = mGlobalConfig.mStationID;
 
     // FCD request header
-    fcdReq->fcdRequestHeader.dMax = 200;
-    fcdReq->fcdRequestHeader.hCur = 0;
-    fcdReq->fcdRequestHeader.hMax = 4;
-    fcdReq->fcdRequestHeader.latitude = 180;
-    fcdReq->fcdRequestHeader.longitude = 90;
-    fcdReq->fcdRequestHeader.tMaxRep = 1000; // in milliseconds
-    fcdReq->fcdRequestHeader.tMaxReq = 100; // in milliseconds
+    fcdReq->fcdRequestHeader.dMax = mConfig.mMaxDistance;
+    fcdReq->fcdRequestHeader.hCur = 0; //dynamic, will be increased at every hop
+    fcdReq->fcdRequestHeader.hMax = mConfig.mMaxHops;
+    mMutexLatestGps.lock();
+	if(mLatestGps.has_time()) {	//only add gps if valid data is available
+		fcdReq->fcdRequestHeader.latitude = mLatestGps.latitude() * 10000000; // in one-tenth of microdegrees
+		fcdReq->fcdRequestHeader.longitude = mLatestGps.longitude() * 10000000; // in one-tenth of microdegrees
+		fcdReq->fcdRequestHeader.altitude.altitudeValue = mLatestGps.altitude();
+	} else {
+		fcdReq->fcdRequestHeader.latitude = Latitude_unavailable;
+		fcdReq->fcdRequestHeader.longitude = Longitude_unavailable;
+		fcdReq->fcdRequestHeader.altitude.altitudeValue = AltitudeValue_unavailable;
+	}
+	mMutexLatestGps.unlock();
+    fcdReq->fcdRequestHeader.tMaxRep = mConfig.mMaxReplyTimer; // in milliseconds
+    fcdReq->fcdRequestHeader.tMaxReq = mConfig.mMaxRequestTimer; // in milliseconds
     fcdReq->fcdRequestHeader.generationTime = *timestamp;
     return fcdReq;
 }

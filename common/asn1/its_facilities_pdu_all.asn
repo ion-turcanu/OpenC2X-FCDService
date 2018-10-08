@@ -267,7 +267,7 @@ DEFINITIONS AUTOMATIC TAGS ::=
 BEGIN
     
     IMPORTS
-	StationID, Longitude, Latitude, TimestampIts
+	StationID, Longitude, Latitude, Altitude, TimestampIts
 	-- ItsPduHeader, CauseCode, ReferencePosition, AccelerationControl,
 	--    Curvature, CurvatureCalculationMode, Heading, LanePosition,
 	--    EmergencyPriority, EmbarkationStatus, Speed, DriveDirection,
@@ -308,6 +308,7 @@ BEGIN
 	tMaxRep	INTEGER {} (0..4294967295),
 	longitude	Longitude,
 	latitude 	Latitude,
+	altitude	Altitude,
 	generationTime	TimestampIts
     }
 

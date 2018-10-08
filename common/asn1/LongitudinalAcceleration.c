@@ -31,8 +31,8 @@ static ber_tlv_tag_t asn_DEF_LongitudinalAcceleration_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_LongitudinalAcceleration_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* longitudinalAccelerationValue at 834 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* longitudinalAccelerationConfidence at 836 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* longitudinalAccelerationValue at 835 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* longitudinalAccelerationConfidence at 837 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_LongitudinalAcceleration_specs_1 = {
 	sizeof(struct LongitudinalAcceleration),

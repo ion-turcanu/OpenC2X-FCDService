@@ -61,17 +61,40 @@ public:
     void sendLoop();
 
 private:
+	/** Receives incoming FCDs from DCC.
+	 */
     void receive();
+
+	/** Receives new GPS data from the GPS module.
+	 *
+	 */
+	void receiveGpsData();
+
+	/** Receives new OBD2 data from the OBD2 module.
+	 *
+	 */
+	void receiveObd2Data();
 
 	FCDREQ_t* generateFcd(int reqId);
 
     CommunicationSender*   mSenderToDcc;
     CommunicationReceiver* mReceiverFromDcc;
-    GlobalConfig           mGlobalConfig;
+	CommunicationReceiver* mReceiverGps;
+	CommunicationReceiver* mReceiverObd2;
+
+	gpsPackage::GPS mLatestGps;
+	std::mutex mMutexLatestGps;
+
+	obd2Package::OBD2 mLatestObd2;
+	std::mutex mMutexLatestObd2;
+
+    GlobalConfig    mGlobalConfig;
 	MessageUtils*	mMsgUtils;
 
     boost::thread* mThreadSender;
     boost::thread* mThreadReceiver;
+	boost::thread* mThreadGpsDataReceive;
+	boost::thread* mThreadObd2DataReceive;
 
     FcdServiceConfig mConfig;
     LoggingUtility* mLogger;
