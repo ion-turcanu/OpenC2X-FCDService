@@ -12,6 +12,7 @@
 #include <asn_application.h>
 
 /* Including external dependencies */
+#include <NativeInteger.h>
 #include "FCDBasicHeader.h"
 #include "FCDRequestHeader.h"
 #include <constr_SEQUENCE.h>
@@ -20,8 +21,15 @@
 extern "C" {
 #endif
 
+/* Dependencies */
+typedef enum messageID {
+	messageID_request	= 1,
+	messageID_reply	= 2
+} e_messageID;
+
 /* FCDREQ */
 typedef struct FCDREQ {
+	long	 messageID;
 	FCDBasicHeader_t	 fcdBasicHeader;
 	FCDRequestHeader_t	 fcdRequestHeader;
 	

@@ -283,6 +283,10 @@ BEGIN
 	     itsDomain(5) wg1(1) ts(102894) cdd(2) version(1)};
 	
 	FCDREQ ::= SEQUENCE {
+	messageID	INTEGER {
+	    request(1),
+		reply(2)
+	} (0..255),
 	fcdBasicHeader	FCDBasicHeader,
 	fcdRequestHeader	FCDRequestHeader
     }
@@ -292,10 +296,6 @@ BEGIN
 		currentVersion(1)
 	} (0..255),
 	reserved INTEGER {} (0..255),
-	messageID	INTEGER {
-	    request(1),
-	    reply(2)
-	} (0..255),
 	stationID	StationID,
 	requestID	RequestID
     }

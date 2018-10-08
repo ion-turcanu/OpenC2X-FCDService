@@ -46,10 +46,10 @@ int MessageUtils::writeOut(const void *buffer, size_t size, void *app_key) {
 vector<uint8_t> MessageUtils::encodeMessage(asn_TYPE_descriptor_t *td, void *structPtr) {
 	vector<uint8_t> payload;
 	asn_enc_rval_t erv = uper_encode(td, const_cast<void*>(structPtr), &MessageUtils::writeOut, &payload);
-	mLogger->logInfo("Encoded bytes: " + to_string(erv.encoded));
 	if(erv.encoded == -1) {
 		throw runtime_error("Encoding failed");
 	}
+	mLogger->logInfo("Encoded bytes: " + to_string(erv.encoded));
 	return payload;
 }
 

@@ -13,9 +13,10 @@
 #include <cmath>
 #include <common/asn1/per_encoder.h>
 
+using namespace std;
+
 INITIALIZE_EASYLOGGINGPP
 
-using namespace std;
 
 FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string logConf, string statConf) {
     try {
@@ -28,6 +29,7 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     mConfig = config;
 
     // Logging
+    mMsgUtils = new MessageUtils("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
     mLogger = new LoggingUtility("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
     
     // Sender and Receiver
@@ -54,6 +56,7 @@ FcdService::~FcdService() {
     delete mSenderToDcc;
 
     delete mLogger;
+    delete mMsgUtils;
 }
 
 void FcdService::sendLoop() {
@@ -85,7 +88,7 @@ void FcdService::sendLoop() {
 
         // Wait for txInterval seconds
         boost::this_thread::sleep(boost::posix_time::seconds(mConfig.mTxInterval));
-        mLogger->logInfo("Sending FCD out: " + strFcd);
+        cout << "Sending FCD out: " << strFcd << endl;
         
         counter++;
     }
@@ -107,7 +110,7 @@ void FcdService::receive() {
 			continue;
 		}
         
-        mLogger->logInfo("Incoming FCD: " + serializedAsnFcd);
+        cout << "Incoming FCD: " << serializedAsnFcd << endl;
     }
 }
 
@@ -115,7 +118,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
     mLogger->logDebug("Generating FCDRequest");
 	FCDREQ_t* fcdReq = static_cast<FCDREQ_t*>(calloc(1, sizeof(FCDREQ_t)));
 	if (!fcdReq) {
-		throw runtime_error("could not allocate CAM_t");
+		throw runtime_error("could not allocate FCDREQ_t");
 	}
 
     int64_t currTime = Utils::currentTime();
@@ -126,8 +129,8 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
 	timestamp->size = 6;
 	memcpy(timestamp->buf, &currTime, 6);
 
+    fcdReq->messageID = messageID_request;
     // FCD basic header
-    fcdReq->fcdBasicHeader.messageID = messageID_request;
     fcdReq->fcdBasicHeader.protocolVersion = protocolVersion_currentVersion;
     fcdReq->fcdBasicHeader.requestID = reqId;
     fcdReq->fcdBasicHeader.reserved = 0; //TODO: check this value
@@ -142,6 +145,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
     fcdReq->fcdRequestHeader.tMaxRep = 1000; // in milliseconds
     fcdReq->fcdRequestHeader.tMaxReq = 100; // in milliseconds
     fcdReq->fcdRequestHeader.generationTime = *timestamp;
+    return fcdReq;
 }
 
 int main(int argc, const char* argv[]) {

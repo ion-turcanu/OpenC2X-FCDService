@@ -25,16 +25,11 @@ extern "C" {
 typedef enum protocolVersion {
 	protocolVersion_currentVersion	= 1
 } e_protocolVersion;
-typedef enum messageID {
-	messageID_request	= 1,
-	messageID_reply	= 2
-} e_messageID;
 
 /* FCDBasicHeader */
 typedef struct FCDBasicHeader {
 	long	 protocolVersion;
 	long	 reserved;
-	long	 messageID;
 	StationID_t	 stationID;
 	RequestID_t	 requestID;
 	

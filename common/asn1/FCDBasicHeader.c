@@ -57,42 +57,12 @@ memb_reserved_constraint_1(asn_TYPE_descriptor_t *td, const void *sptr,
 	}
 }
 
-static int
-memb_messageID_constraint_1(asn_TYPE_descriptor_t *td, const void *sptr,
-			asn_app_constraint_failed_f *ctfailcb, void *app_key) {
-	long value;
-	
-	if(!sptr) {
-		_ASN_CTFAIL(app_key, td, sptr,
-			"%s: value not given (%s:%d)",
-			td->name, __FILE__, __LINE__);
-		return -1;
-	}
-	
-	value = *(const long *)sptr;
-	
-	if((value >= 0 && value <= 255)) {
-		/* Constraint check succeeded */
-		return 0;
-	} else {
-		_ASN_CTFAIL(app_key, td, sptr,
-			"%s: constraint failed (%s:%d)",
-			td->name, __FILE__, __LINE__);
-		return -1;
-	}
-}
-
 static asn_per_constraints_t asn_PER_memb_protocolVersion_constr_2 = {
 	{ APC_CONSTRAINED,	 8,  8,  0,  255 }	/* (0..255) */,
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
 };
 static asn_per_constraints_t asn_PER_memb_reserved_constr_4 = {
-	{ APC_CONSTRAINED,	 8,  8,  0,  255 }	/* (0..255) */,
-	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
-	0, 0	/* No PER value map */
-};
-static asn_per_constraints_t asn_PER_memb_messageID_constr_5 = {
 	{ APC_CONSTRAINED,	 8,  8,  0,  255 }	/* (0..255) */,
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
@@ -116,17 +86,8 @@ static asn_TYPE_member_t asn_MBR_FCDBasicHeader_1[] = {
 		0,
 		"reserved"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct FCDBasicHeader, messageID),
-		(ASN_TAG_CLASS_CONTEXT | (2 << 2)),
-		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_NativeInteger,
-		memb_messageID_constraint_1,
-		&asn_PER_memb_messageID_constr_5,
-		0,
-		"messageID"
-		},
 	{ ATF_NOFLAGS, 0, offsetof(struct FCDBasicHeader, stationID),
-		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
+		(ASN_TAG_CLASS_CONTEXT | (2 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_StationID,
 		0,	/* Defer constraints checking to the member type */
@@ -135,7 +96,7 @@ static asn_TYPE_member_t asn_MBR_FCDBasicHeader_1[] = {
 		"stationID"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct FCDBasicHeader, requestID),
-		(ASN_TAG_CLASS_CONTEXT | (4 << 2)),
+		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_RequestID,
 		0,	/* Defer constraints checking to the member type */
@@ -148,17 +109,16 @@ static ber_tlv_tag_t asn_DEF_FCDBasicHeader_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_FCDBasicHeader_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* protocolVersion at 292 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* reserved at 294 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* messageID at 296 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 }, /* stationID at 299 */
-    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 } /* requestID at 301 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* protocolVersion at 296 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* reserved at 298 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* stationID at 299 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 } /* requestID at 301 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_FCDBasicHeader_specs_1 = {
 	sizeof(struct FCDBasicHeader),
 	offsetof(struct FCDBasicHeader, _asn_ctx),
 	asn_MAP_FCDBasicHeader_tag2el_1,
-	5,	/* Count of tags in the map */
+	4,	/* Count of tags in the map */
 	0, 0, 0,	/* Optional elements (not needed) */
 	-1,	/* Start extensions */
 	-1	/* Stop extensions */
@@ -184,7 +144,7 @@ asn_TYPE_descriptor_t asn_DEF_FCDBasicHeader = {
 		/sizeof(asn_DEF_FCDBasicHeader_tags_1[0]), /* 1 */
 	0,	/* No PER visible constraints */
 	asn_MBR_FCDBasicHeader_1,
-	5,	/* Elements count */
+	4,	/* Elements count */
 	&asn_SPC_FCDBasicHeader_specs_1	/* Additional specs */
 };
 
