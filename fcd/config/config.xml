@@ -1,10 +1,10 @@
 <fcd>
 	<!-- RSU-related configuration -->
-	<txInterval>5</txInterval> <!-- in seconds ! -->
-	<maxDistance>200</maxDistance>  <!-- in meters ! -->
-	<maxHops>3</maxHops>
-	<maxRequestTimer>0.1</maxRequestTimer> <!-- in seconds ! -->
-	<maxReplyTimer>1</maxReplyTimer> <!-- in seconds ! -->
+	<txInterval>10</txInterval> <!-- in seconds ! -->
+	<maxDistance>300</maxDistance>  <!-- in meters ! -->
+	<maxHops>2</maxHops>
+	<maxRequestTimer>100</maxRequestTimer> <!-- in milliseconds ! -->
+	<maxReplyTimer>1000</maxReplyTimer> <!-- in milliseconds ! -->
 	
 	<!-- Basic Container in CAM -->
 	<isRSU>0</isRSU> <!-- 0 for Vehicle, 1 for RSU -->

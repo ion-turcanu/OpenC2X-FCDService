@@ -21,6 +21,7 @@
 //#include <common/asn1/FCDRequestHeader.h>
 #include <common/asn1/FCDREQ.h>
 #include <common/messages/MessageUtils.h>
+#include "Timer.h"
 
 
 /** Struct that hold the configuration for FcdService.
@@ -75,7 +76,35 @@ private:
 	 */
 	void receiveObd2Data();
 
+	void handleRequest(FCDREQ_t* fcd);
+
+	void handleReply(FCDREQ_t* fcd);
+
 	FCDREQ_t* generateFcd(int reqId);
+
+	/** Calculates the distance between the two specified coordinates
+	 *
+	 * @param lat1 Latitude of coordinate 1.
+	 * @param lon1 Longitude of coordinate 1.
+	 * @param lat2 Latitude of coordinate 2.
+	 * @param lon2 Longitude of coordinate 2.
+	 * @return The distance in meters.
+	 */
+	double getDistance(double lat1, double lon1, double lat2, double lon2);
+
+	/** Updates the number of received FCD Requestes
+	 *
+	 */
+	void updateCopy(FCDREQ_t* fcd);
+
+	/** Returns the number of copies
+	 *
+	 */
+	int getNumberOfCopies(int id);
+
+	static void callback_request(FcdService* self, int tempId);
+
+	static void callback_reply(FcdService* self, int tempId);
 
     CommunicationSender*   mSenderToDcc;
     CommunicationReceiver* mReceiverFromDcc;
@@ -95,9 +124,49 @@ private:
     boost::thread* mThreadReceiver;
 	boost::thread* mThreadGpsDataReceive;
 	boost::thread* mThreadObd2DataReceive;
+	//boost::thread* mIoServiceThread;
 
     FcdServiceConfig mConfig;
     LoggingUtility* mLogger;
+
+	//boost::asio::io_service mIoService;
+	//boost::asio::deadline_timer* mTimer;
+
+	bool mRelayNode;
+	int mCurHopCount;
+
+
+	class FCDRequestInfo{
+
+    public:
+
+        FCDRequestInfo(FCDREQ_t* newMsg){ //constructor
+            reqMsg = newMsg;
+            copies = 1;
+        }
+
+        ~FCDRequestInfo(){}; //destructor
+
+        void updateCopy(){
+            copies++;
+        }
+
+        int getCopies(){
+            return copies;
+        }
+
+        FCDREQ_t* getReqMsg(){
+            return reqMsg;
+        }
+
+        private:
+            FCDREQ_t* reqMsg;
+            int copies;
+    };
+	typedef std::map<int, FCDRequestInfo> FcdMsgInfo_table;
+    FcdMsgInfo_table reqMap;
 };
+
+//void callback_reply(FcdService*, int);
 
 #endif

@@ -1,5 +1,6 @@
 set(fcd_SRCS
    fcdservice.cpp
+   Timer.cpp
 )
 
 add_executable (fcd ${fcd_SRCS})
