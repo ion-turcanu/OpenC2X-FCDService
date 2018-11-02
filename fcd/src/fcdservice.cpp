@@ -331,6 +331,12 @@ void FcdService::updateCopy(FCDREQ_t* fcd){
     }
     else{
         it->second.updateCopy();
+        if (fcd->fcdRequestHeader.hCur > getCurrentHopCount(fcd->fcdBasicHeader.requestID)){
+            it->second.inhibit();
+        }
+        else{
+            mLogger->logInfo("Spurious forwarder: do not inhibit.");
+        }
     }
 }
 
@@ -344,6 +350,33 @@ int FcdService::getNumberOfCopies(int msgId){
     else{
         throw runtime_error("Error: message id not found!");
     }
+    return result;
+}
+
+
+int FcdService::getCurrentHopCount(int msgId){
+    int result = 0;
+    FcdMsgInfo_table::iterator it = reqMap.find(msgId);
+    if (it != reqMap.end()){
+        result = it->second.getReqMsg()->fcdRequestHeader.hCur;
+    }
+    else{
+        throw runtime_error("Error: the Request message is not in my local table.");
+    }
+    return result;
+}
+
+
+bool FcdService::isInhibited(int msgId){
+    int result = 0;
+    FcdMsgInfo_table::iterator it = reqMap.find(msgId);
+    if (it != reqMap.end()){
+        result = it->second.isInhibited();
+    }
+    else{
+        throw runtime_error("Error: message id not found!");
+    }
+
     return result;
 }
 
@@ -366,7 +399,8 @@ void FcdService::callback_request(FcdService* self, int tempId){
 
     FcdMsgInfo_table::iterator it = self->reqMap.find(tempId);
     if (it != self->reqMap.end()){
-        if (it->second.getCopies() == 1){
+        //if (it->second.getCopies() == 1){
+        if (!self->isInhibited(tempId)){
             self->mLogger->logInfo("Timer expired.");
             self->mRelayNode = true;
 

@@ -102,6 +102,10 @@ private:
 	 */
 	int getNumberOfCopies(int id);
 
+	int getCurrentHopCount(int msgId);
+
+	bool isInhibited(int msgId);
+
 	static void callback_request(FcdService* self, int tempId);
 
 	static void callback_reply(FcdService* self, int tempId);
@@ -143,6 +147,7 @@ private:
         FCDRequestInfo(FCDREQ_t* newMsg){ //constructor
             reqMsg = newMsg;
             copies = 1;
+			inhibited = false;
         }
 
         ~FCDRequestInfo(){}; //destructor
@@ -151,8 +156,16 @@ private:
             copies++;
         }
 
+		void inhibit(){
+            inhibited = true;
+        }
+
         int getCopies(){
             return copies;
+        }
+
+		bool isInhibited(){
+            return inhibited;
         }
 
         FCDREQ_t* getReqMsg(){
@@ -162,6 +175,7 @@ private:
         private:
             FCDREQ_t* reqMsg;
             int copies;
+			bool inhibited;
     };
 	typedef std::map<int, FCDRequestInfo> FcdMsgInfo_table;
     FcdMsgInfo_table reqMap;
