@@ -288,7 +288,8 @@ BEGIN
 		reply(2)
 	} (0..255),
 	fcdBasicHeader	FCDBasicHeader,
-	fcdRequestHeader	FCDRequestHeader
+	fcdRequestHeader	FCDRequestHeader,
+	payload  Payload
     }
 
     FCDBasicHeader ::= SEQUENCE {
@@ -313,7 +314,8 @@ BEGIN
     }
 
 	RequestID ::= INTEGER (0..65536)
-
+	Payload ::= UTF8String -- (SIZE(0..1000))
+	--IA5String (SIZE(0..1000))
 END
 
 

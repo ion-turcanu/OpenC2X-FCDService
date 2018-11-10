@@ -5,12 +5,18 @@
 #include <common/config/config.h>
 #include <common/utility/CommunicationReceiver.h>
 #include <common/utility/CommunicationSender.h>
-#include <common/buffers/build/data.pb.h>
-//#include <common/buffers/build/cam.pb.h>
+#include <common/utility/CommunicationClient.h>
+#include <common/buffers/build/cam.pb.h>
+#include <common/buffers/build/denm.pb.h>
 #include <common/buffers/build/gps.pb.h>
 #include <common/buffers/build/obd2.pb.h>
+#include <common/buffers/build/dccInfo.pb.h>
+#include <common/buffers/build/camInfo.pb.h>
+#include <common/buffers/build/ldmData.pb.h>
 #include <common/buffers/build/request.pb.h>
-//#include <common/buffers/build/camInfo.pb.h>
+#include <common/buffers/build/data.pb.h>
+#include <google/protobuf/text_format.h>
+//#include <google/protobuf/text_format.h>
 //#include <common/buffers/build/CoopAwareness.pb.h>
 //#include <common/buffers/build/ItsPduHeader.pb.h>
 #include <boost/asio.hpp>
@@ -22,6 +28,10 @@
 #include <common/asn1/FCDREQ.h>
 #include <common/messages/MessageUtils.h>
 #include "Timer.h"
+#include "external/rapidjson/document.h"
+#include "external/rapidjson/writer.h"
+#include "external/rapidjson/stringbuffer.h"
+#include <iostream>
 
 
 /** Struct that hold the configuration for FcdService.
@@ -34,6 +44,7 @@ struct FcdServiceConfig {
 	double mMaxRequestTimer;
 	double mMaxReplyTimer;
 	bool mIsRSU;
+	int mTimeout;
 
 	void loadConfigXML(const std::string &filename) {
 		boost::property_tree::ptree pt;
@@ -45,6 +56,8 @@ struct FcdServiceConfig {
 		mMaxRequestTimer = pt.get("fcd.maxRequestTimer", 0.1);
 		mMaxReplyTimer = pt.get("fcd.maxReplyTimer", 1);
 		mIsRSU = pt.get("fcd.isRSU", false);
+
+		mTimeout = pt.get("fcd.timeout", 100);
 	}
 };
 
@@ -105,6 +118,12 @@ private:
 	int getCurrentHopCount(int msgId);
 
 	bool isInhibited(int msgId);
+	
+	std::string createPayload(std::string cams);
+
+	std::string requestCam(std::string condition);
+
+	std::string requestCamInfo(std::string condition);
 
 	static void callback_request(FcdService* self, int tempId);
 
@@ -114,6 +133,11 @@ private:
     CommunicationReceiver* mReceiverFromDcc;
 	CommunicationReceiver* mReceiverGps;
 	CommunicationReceiver* mReceiverObd2;
+	
+	CommunicationClient* mClientCam;
+	CommunicationClient* mClientCamInfo;
+	std::mutex mMutexCam;
+	std::mutex mMutexCamInfo;
 
 	gpsPackage::GPS mLatestGps;
 	std::mutex mMutexLatestGps;
@@ -137,6 +161,7 @@ private:
 	//boost::asio::deadline_timer* mTimer;
 
 	bool mRelayNode;
+	bool mReplied;
 	int mCurHopCount;
 
 
@@ -179,6 +204,18 @@ private:
     };
 	typedef std::map<int, FCDRequestInfo> FcdMsgInfo_table;
     FcdMsgInfo_table reqMap;
+
+
+	class FCDInfo {
+    private:
+        uint64_t vehicleID;
+        int64_t generationTime;
+        gpsPackage::GPS position;
+        //obd2Package::OBD2;
+  	};
+
+  	typedef std::map<int, FCDInfo> FCDInfoSet;    //id, FCDInfo
+	FCDInfoSet fcdSet;
 };
 
 //void callback_reply(FcdService*, int);

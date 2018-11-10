@@ -3,6 +3,7 @@
 #define ELPP_NO_DEFAULT_LOG_FILE
 
 #include "fcdservice.h"
+#include <httpServer/src/external/pbjson.hpp>
 #include <iostream>
 #include <string>
 #include <common/utility/Utils.h>
@@ -33,10 +34,13 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     mLogger = new LoggingUtility("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
     
     // Sender and Receiver
-    mReceiverFromDcc = new CommunicationReceiver("FcdService", "5555", "FCD", mGlobalConfig.mExpNo, logConf, statConf);
-    mSenderToDcc     = new CommunicationSender("FcdService", "2323", mGlobalConfig.mExpNo, logConf, statConf);
-    mReceiverGps = new CommunicationReceiver("FcdService", "3333", "GPS", mGlobalConfig.mExpNo, logConf, statConf);
-	mReceiverObd2 = new CommunicationReceiver("FcdService", "2222", "OBD2", mGlobalConfig.mExpNo, logConf, statConf);
+    std::string moduleName = "FcdService";
+    mReceiverFromDcc = new CommunicationReceiver(moduleName, "5555", "FCD", mGlobalConfig.mExpNo, logConf, statConf);
+    mSenderToDcc     = new CommunicationSender(moduleName, "2323", mGlobalConfig.mExpNo, logConf, statConf);
+    mReceiverGps = new CommunicationReceiver(moduleName, "3333", "GPS", mGlobalConfig.mExpNo, logConf, statConf);
+	mReceiverObd2 = new CommunicationReceiver(moduleName, "2222", "OBD2", mGlobalConfig.mExpNo, logConf, statConf);
+    mClientCam = new CommunicationClient(moduleName, "6789", mGlobalConfig.mExpNo, logConf, statConf);
+    mClientCamInfo = new CommunicationClient(moduleName, "6789", mGlobalConfig.mExpNo, logConf, statConf);
 
     // Start the threads
     if (mConfig.mIsRSU){
@@ -67,6 +71,8 @@ FcdService::~FcdService() {
     delete mSenderToDcc;
     delete mReceiverGps;
 	delete mReceiverObd2;
+    delete mClientCam;
+    delete mClientCamInfo;
 
     delete mLogger;
     delete mMsgUtils;
@@ -141,7 +147,7 @@ void FcdService::receive() {
             handleRequest(fcd);
         }
         else if(fcd->messageID == messageID_reply){
-            mLogger->logInfo("Received Reply " + to_string(fcd->fcdBasicHeader.requestID));
+            mLogger->logInfo("Received Reply " + to_string(fcd->fcdBasicHeader.requestID) + " from sender " + to_string(fcd->fcdBasicHeader.stationID));
             handleReply(fcd);
         }
         else{
@@ -277,6 +283,7 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
         if (getNumberOfCopies(fcd->fcdBasicHeader.requestID) == 1){
             mLogger->logInfo("This is the first copy.");
             mRelayNode = false;
+            mReplied = false;
             mCurHopCount = fcd->fcdRequestHeader.hCur + 1;
 
             if (mCurHopCount <= fcd->fcdRequestHeader.hMax){
@@ -305,7 +312,11 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
 
 
 void FcdService::handleReply(FCDREQ_t* fcd){
-    //TODO
+    stringstream s;
+    s << fcd->payload.buf;
+    mLogger->logInfo(s.str());
+
+    //TODO: merge the received payload with the existing information
 }
 
 
@@ -381,6 +392,118 @@ bool FcdService::isInhibited(int msgId){
 }
 
 
+//requests all CAMs from LDM
+std::string FcdService::requestCam(std::string condition) {
+	mMutexCam.lock();
+	std::string request, reply;
+	std::string serializedData;
+	dataPackage::LdmData ldmData;
+	//get all CAMs from LDM
+	reply = mClientCam->sendRequest("CAM", condition, mConfig.mTimeout);
+	if (reply != "") {
+		ldmData.ParseFromString(reply);
+
+		//convert to JSON
+		std::string json = "{\"type\":\"CAM\",\"number\":" + std::to_string(ldmData.data_size()) + ",\"msgs\":[";
+		for (int i=0; i<ldmData.data_size(); i++) {
+			std::string tempJson;
+			std::string serializedCam = ldmData.data(i);
+			camPackage::CAM cam;
+			cam.ParseFromString(serializedCam);
+			pbjson::pb2json(&cam, tempJson);
+			if (i > 0) {
+				json += "," + tempJson;
+			}
+			else {
+				json += tempJson;
+			}
+		}
+		json += "]}";
+		mMutexCam.unlock();
+		return json;
+	}
+	mMutexCam.unlock();
+	return "";
+}
+
+
+//requests all CAMINFOs from LDM
+std::string FcdService::requestCamInfo(std::string condition) {
+	mMutexCamInfo.lock();
+	std::string request, reply;
+	std::string serializedData;
+	dataPackage::LdmData ldmData;
+	//get all camInfos from LDM
+	reply = mClientCamInfo->sendRequest("camInfo", condition, mConfig.mTimeout);
+	if (reply != "") {
+		ldmData.ParseFromString(reply);
+
+		//convert to JSON
+		std::string json = "{\"type\":\"camInfo\",\"number\":" + std::to_string(ldmData.data_size()) + ",\"msgs\":[";
+
+		for (int i=0; i<ldmData.data_size(); i++) {
+			std::string tempJson;
+			std::string serializedCamInfo = ldmData.data(i);
+			infoPackage::CamInfo camInfo;
+			camInfo.ParseFromString(serializedCamInfo);
+			pbjson::pb2json(&camInfo, tempJson);
+			if (i > 0) {
+				json += "," + tempJson;
+			}
+			else {
+				json += tempJson;
+			}
+		}
+		json += "]}";
+		mMutexCamInfo.unlock();
+		return json;
+	}
+	mMutexCamInfo.unlock();
+	return "";
+}
+
+
+std::string FcdService::createPayload(std::string cams){
+    //Parse the input JSON string into DOM.
+    const char* myJson = cams.c_str();
+    rapidjson::Document d;
+    d.Parse(myJson);
+
+    //Create a new DOM to store the extracted information
+    rapidjson::Document newDoc;
+    newDoc.SetObject();
+    rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+
+    rapidjson::Value msgs(rapidjson::kArrayType);
+    rapidjson::Value val(rapidjson::kObjectType);
+
+    string tType = d["type"].GetString();
+    val.SetString(tType.c_str(), static_cast<rapidjson::SizeType>(tType.length()), allocator);
+    newDoc.AddMember("type", val, allocator);
+
+    newDoc.AddMember("number", d["number"].GetInt(), allocator);
+
+    const rapidjson::Value& a = d["msgs"];
+    assert(a.IsArray());
+    for (rapidjson::Value::ConstValueIterator itr = a.Begin(); itr != a.End(); ++itr){
+        rapidjson::Value obj(rapidjson::kObjectType);
+        obj.AddMember("stationID",  (*itr)["header"]["stationID"].GetInt(), allocator);
+        obj.AddMember("lat",  (*itr)["coop"]["camParameters"]["basicContainer"]["latitude"].GetInt64(), allocator);
+        obj.AddMember("lon",  (*itr)["coop"]["camParameters"]["basicContainer"]["longitude"].GetInt64(), allocator);
+        msgs.PushBack(obj, allocator);
+    }
+
+    newDoc.AddMember("msgs", msgs, allocator);
+
+    //Stringify the DOM
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    newDoc.Accept(writer);
+
+    return buffer.GetString();
+}
+
+
 void FcdService::callback_request(FcdService* self, int tempId){
     double mLat = 0;
     double mLong = 0;
@@ -401,7 +524,7 @@ void FcdService::callback_request(FcdService* self, int tempId){
     if (it != self->reqMap.end()){
         //if (it->second.getCopies() == 1){
         if (!self->isInhibited(tempId)){
-            self->mLogger->logInfo("Timer expired.");
+            self->mLogger->logInfo("REQUEST timer expired.");
             self->mRelayNode = true;
 
             int64_t currTime = Utils::currentTime();
@@ -454,6 +577,7 @@ void FcdService::callback_request(FcdService* self, int tempId){
 
             auto call_reply = boost::bind(FcdService::callback_reply,self,tempId);
 
+            //TODO: add a random factor to avoid synchronized transmissions
             int64_t reply_timer = toForward->fcdRequestHeader.tMaxRep * (1 - (self->mCurHopCount / (double)toForward->fcdRequestHeader.hMax));
             self->mLogger->logInfo("Reply Timer = " + to_string(reply_timer) + "ms");
             Timer* tReply = new Timer(call_reply,boost::chrono::milliseconds(reply_timer),true);
@@ -470,7 +594,52 @@ void FcdService::callback_request(FcdService* self, int tempId){
 
 
 void FcdService::callback_reply(FcdService* self, int tempId){
-    cout << ">>> CALLBACK_REPLY from Request ID " << tempId << endl;
+    self->mLogger->logInfo("REPLY timer expired.");
+    
+    //get CAMs from LDM
+    string condition = "latest";
+    string existing_cams = self->requestCam(condition);
+
+    //HACK: filter the extracted information to fit the MTU
+    //TODO: split the data in multiple frames
+    string extracted_payload = self->createPayload(existing_cams);
+    int payload_len = extracted_payload.size()+1;
+    char fcd_from_ldm[payload_len];
+    strcpy(fcd_from_ldm, extracted_payload.c_str());
+
+    //create the payload
+    Payload_t* payload = static_cast<Payload_t*>(calloc(1, sizeof(Payload_t)));
+    payload->buf = static_cast<uint8_t*>(calloc(payload_len, 1));
+    payload->size = payload_len;
+    memcpy(payload->buf, fcd_from_ldm, payload_len);
+
+    //create the FCDReply message
+    FCDREQ_t* fcdRep = self->generateFcd(tempId);
+    fcdRep->messageID = messageID_reply;
+    fcdRep->payload = *payload;
+
+    string serializedData;
+    dataPackage::DATA data;
+    vector<uint8_t> encodedFcd = self->mMsgUtils->encodeMessage(&asn_DEF_FCDREQ, fcdRep);
+    string strFcd(encodedFcd.begin(), encodedFcd.end());
+
+    int64_t currTime = Utils::currentTime();                        
+    data.set_id(messageID_reply);
+    data.set_type(dataPackage::DATA_Type_FCD);
+    data.set_priority(dataPackage::DATA_Priority_VI);
+    data.set_createtime(currTime);
+    data.set_validuntil(currTime + 2*1000*1000*1000);
+    data.set_content(strFcd);
+
+    data.SerializeToString(&serializedData);
+
+    // Send message
+    self->mSenderToDcc->send("FCD", serializedData);
+
+    self->mLogger->logInfo("Sending Reply " + to_string(fcdRep->fcdBasicHeader.requestID));
+    self->mLogger->logInfo(extracted_payload);
+
+    self->mReplied = true;
 }
 
 
@@ -494,8 +663,3 @@ int main(int argc, const char* argv[]) {
     
     return EXIT_SUCCESS;
 }
-
-
-/*void callback_reply(FcdService* fcdServ, int tempId){
-    cout << ">>> CHILD process alive. Request ID " << tempId << endl;
-}*/

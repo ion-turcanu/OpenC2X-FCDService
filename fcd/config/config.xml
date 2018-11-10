@@ -9,4 +9,6 @@
 	<!-- Basic Container in CAM -->
 	<isRSU>0</isRSU> <!-- 0 for Vehicle, 1 for RSU -->
 	
+	<!-- Timeout for interrogating the LDM -->
+	<timeout>100</timeout> <!-- in ms -->
 </fcd>

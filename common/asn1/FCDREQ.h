@@ -15,6 +15,7 @@
 #include <NativeInteger.h>
 #include "FCDBasicHeader.h"
 #include "FCDRequestHeader.h"
+#include "Payload.h"
 #include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
@@ -32,6 +33,7 @@ typedef struct FCDREQ {
 	long	 messageID;
 	FCDBasicHeader_t	 fcdBasicHeader;
 	FCDRequestHeader_t	 fcdRequestHeader;
+	Payload_t	 payload;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;

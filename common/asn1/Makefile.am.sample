@@ -32,6 +32,7 @@ ASN_MODULE_SOURCES=	\
 	FCDBasicHeader.c	\
 	FCDRequestHeader.c	\
 	RequestID.c	\
+	Payload.c	\
 	ItsPduHeader.c	\
 	StationID.c	\
 	ReferencePosition.c	\
@@ -199,6 +200,7 @@ ASN_MODULE_HEADERS=	\
 	FCDBasicHeader.h	\
 	FCDRequestHeader.h	\
 	RequestID.h	\
+	Payload.h	\
 	ItsPduHeader.h	\
 	StationID.h	\
 	ReferencePosition.h	\

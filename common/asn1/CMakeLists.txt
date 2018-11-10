@@ -164,6 +164,7 @@ set(asn1_SRCS
 	FCDBasicHeader.c
 	FCDRequestHeader.c
 	RequestID.c
+	Payload.c
 )
 
 set(asn1_support_SRCS

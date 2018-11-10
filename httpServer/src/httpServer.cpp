@@ -318,7 +318,7 @@ int main(int argc, const char* argv[]){
 		if(request.has("condition")) {
 			condition = request["condition"].s();
 		}
-
+		
 		reply = server->requestCam(condition);
 
 	    auto resp = crow::response{reply};
