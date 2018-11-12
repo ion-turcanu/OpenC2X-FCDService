@@ -1,7 +1,7 @@
 <fcd>
 	<!-- RSU-related configuration -->
 	<txInterval>10</txInterval> <!-- in seconds ! -->
-	<maxDistance>300</maxDistance>  <!-- in meters ! -->
+	<maxDistance>350</maxDistance>  <!-- in meters ! -->
 	<maxHops>2</maxHops>
 	<maxRequestTimer>100</maxRequestTimer> <!-- in milliseconds ! -->
 	<maxReplyTimer>1000</maxReplyTimer> <!-- in milliseconds ! -->

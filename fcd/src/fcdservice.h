@@ -16,15 +16,10 @@
 #include <common/buffers/build/request.pb.h>
 #include <common/buffers/build/data.pb.h>
 #include <google/protobuf/text_format.h>
-//#include <google/protobuf/text_format.h>
-//#include <common/buffers/build/CoopAwareness.pb.h>
-//#include <common/buffers/build/ItsPduHeader.pb.h>
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <mutex>
-//#include <common/asn1/FCDBasicHeader.h>
-//#include <common/asn1/FCDRequestHeader.h>
 #include <common/asn1/FCDREQ.h>
 #include <common/messages/MessageUtils.h>
 #include "Timer.h"
@@ -118,12 +113,14 @@ private:
 	int getCurrentHopCount(int msgId);
 
 	bool isInhibited(int msgId);
-	
-	std::string createPayload(std::string cams);
+
+	std::string createPayload();
 
 	std::string requestCam(std::string condition);
 
 	std::string requestCamInfo(std::string condition);
+
+	void saveInFcdSet(std::string receivedPayload);
 
 	static void callback_request(FcdService* self, int tempId);
 
@@ -163,6 +160,7 @@ private:
 	bool mRelayNode;
 	bool mReplied;
 	int mCurHopCount;
+	//string mMergedFcdSets;
 
 
 	class FCDRequestInfo{
@@ -207,17 +205,49 @@ private:
 
 
 	class FCDInfo {
+
+	public:
+	    FCDInfo(uint64_t vehID, uint64_t lat, uint64_t lon){ //constructor
+            vehicleID = vehID;
+            latitude = lat;
+			longitude = lon;
+        }
+
+		~FCDInfo(){}; //destructor
+
+		uint64_t getVehicleId(){
+			return vehicleID;
+		}
+
+		uint64_t getLatitude(){
+			return latitude;
+		}
+
+		uint64_t getLongitude(){
+			return longitude;
+		}
+
+		void setVehicleId(uint64_t vehID){
+			vehicleID = vehID;
+		}
+
+		void setLatitude(uint64_t lat){
+			latitude = lat;
+		}
+
+		void setLongitude(uint64_t lon){
+			longitude = lon;
+		}
+
     private:
         uint64_t vehicleID;
-        int64_t generationTime;
-        gpsPackage::GPS position;
+        uint64_t latitude;
+		uint64_t longitude;
         //obd2Package::OBD2;
   	};
 
-  	typedef std::map<int, FCDInfo> FCDInfoSet;    //id, FCDInfo
-	FCDInfoSet fcdSet;
+  	typedef std::map<uint64_t, FCDInfo> FCDInfoSet;    //id, FCDInfo
+	FCDInfoSet mLocalFcdSet;
 };
-
-//void callback_reply(FcdService*, int);
 
 #endif

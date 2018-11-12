@@ -80,6 +80,7 @@ FcdService::~FcdService() {
     //mTimer->cancel();
 	//delete mTimer;
     reqMap.clear();
+    mLocalFcdSet.clear();
 }
 
 
@@ -201,7 +202,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
                         mLong = 5.9450593;
                     }
                     else if (this->mGlobalConfig.mStationID == 22222){
-                        mLat = 49.5044160;
+                        mLat = 49.5054160;
                         mLong = 5.9450593;
                     }
                     else if (this->mGlobalConfig.mStationID == 33333){
@@ -258,7 +259,7 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
         mLong = 5.9450593;
     }
     else if (mGlobalConfig.mStationID == 22222){
-        mLat = 49.5044160;
+        mLat = 49.5054160;
         mLong = 5.9450593;
     }
     else if (mGlobalConfig.mStationID == 33333){
@@ -284,6 +285,7 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
             mLogger->logInfo("This is the first copy.");
             mRelayNode = false;
             mReplied = false;
+            mLocalFcdSet.clear();
             mCurHopCount = fcd->fcdRequestHeader.hCur + 1;
 
             if (mCurHopCount <= fcd->fcdRequestHeader.hMax){
@@ -316,7 +318,13 @@ void FcdService::handleReply(FCDREQ_t* fcd){
     s << fcd->payload.buf;
     mLogger->logInfo(s.str());
 
-    //TODO: merge the received payload with the existing information
+    if (!mReplied){
+        saveInFcdSet(s.str());
+        cout << "Merged FCDs: " << createPayload() << endl;
+    }
+    else{
+        mLogger->logInfo("Already replied: do nothing.");
+    }
 }
 
 
@@ -463,33 +471,22 @@ std::string FcdService::requestCamInfo(std::string condition) {
 }
 
 
-std::string FcdService::createPayload(std::string cams){
-    //Parse the input JSON string into DOM.
-    const char* myJson = cams.c_str();
-    rapidjson::Document d;
-    d.Parse(myJson);
-
+std::string FcdService::createPayload(){
     //Create a new DOM to store the extracted information
     rapidjson::Document newDoc;
     newDoc.SetObject();
-    rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
-
+    rapidjson::Document::AllocatorType& allocator = newDoc.GetAllocator();
     rapidjson::Value msgs(rapidjson::kArrayType);
-    rapidjson::Value val(rapidjson::kObjectType);
 
-    string tType = d["type"].GetString();
-    val.SetString(tType.c_str(), static_cast<rapidjson::SizeType>(tType.length()), allocator);
-    newDoc.AddMember("type", val, allocator);
+    newDoc.AddMember("type", "Payload", allocator);
+    newDoc.AddMember("number", mLocalFcdSet.size(), allocator);
 
-    newDoc.AddMember("number", d["number"].GetInt(), allocator);
-
-    const rapidjson::Value& a = d["msgs"];
-    assert(a.IsArray());
-    for (rapidjson::Value::ConstValueIterator itr = a.Begin(); itr != a.End(); ++itr){
+    FCDInfoSet::iterator it;
+    for (it=mLocalFcdSet.begin(); it!=mLocalFcdSet.end(); it++){
         rapidjson::Value obj(rapidjson::kObjectType);
-        obj.AddMember("stationID",  (*itr)["header"]["stationID"].GetInt(), allocator);
-        obj.AddMember("lat",  (*itr)["coop"]["camParameters"]["basicContainer"]["latitude"].GetInt64(), allocator);
-        obj.AddMember("lon",  (*itr)["coop"]["camParameters"]["basicContainer"]["longitude"].GetInt64(), allocator);
+        obj.AddMember("stationID",  it->second.getVehicleId(), allocator);
+        obj.AddMember("latitude",  it->second.getLatitude(), allocator);
+        obj.AddMember("longitude",  it->second.getLongitude(), allocator);
         msgs.PushBack(obj, allocator);
     }
 
@@ -504,6 +501,65 @@ std::string FcdService::createPayload(std::string cams){
 }
 
 
+void FcdService::saveInFcdSet(std::string payload){
+    const char* myJson = payload.c_str();
+    rapidjson::Document doc;
+    doc.Parse(myJson);
+    const rapidjson::Value& vec = doc["msgs"];
+    string type = doc["type"].GetString();
+
+    if (mLocalFcdSet.empty()){ //empty list: simply insert the elements
+        if (type=="CAM"){ //payload coming from LDM
+            for (rapidjson::Value::ConstValueIterator itr = vec.Begin(); itr != vec.End(); ++itr){
+                FCDInfo newElem((*itr)["header"]["stationID"].GetInt(), (*itr)["coop"]["camParameters"]["basicContainer"]["latitude"].GetInt64(),
+                    (*itr)["coop"]["camParameters"]["basicContainer"]["longitude"].GetInt64());
+                mLocalFcdSet.insert(std::pair<uint64_t,FCDInfo>((*itr)["header"]["stationID"].GetInt(),newElem));
+            }
+        }
+        else{ //payload coming from received Reply
+            for (rapidjson::Value::ConstValueIterator itr = vec.Begin(); itr != vec.End(); ++itr){
+                FCDInfo newElem((*itr)["stationID"].GetInt(), (*itr)["latitude"].GetInt64(), (*itr)["longitude"].GetInt64());
+                mLocalFcdSet.insert(std::pair<uint64_t,FCDInfo>((*itr)["stationID"].GetInt(),newElem));
+            }
+        }
+    }
+    else{ //merge the new elements with the existing ones
+        if (type=="CAM"){ //payload coming from LDM
+            for (rapidjson::Value::ConstValueIterator itr = vec.Begin(); itr != vec.End(); ++itr){
+                uint64_t tempId = (*itr)["header"]["stationID"].GetInt();
+                FCDInfoSet::iterator iter = mLocalFcdSet.find(tempId);
+                if (iter != mLocalFcdSet.end()){ //element already in list
+                    mLocalFcdSet.erase(iter);
+                    FCDInfo newElem(tempId, (*itr)["coop"]["camParameters"]["basicContainer"]["latitude"].GetInt64(),
+                        (*itr)["coop"]["camParameters"]["basicContainer"]["longitude"].GetInt64());
+                    mLocalFcdSet.insert(std::pair<uint64_t,FCDInfo>(tempId,newElem));
+                }
+                else{
+                    FCDInfo newElem(tempId, (*itr)["coop"]["camParameters"]["basicContainer"]["latitude"].GetInt64(),
+                        (*itr)["coop"]["camParameters"]["basicContainer"]["longitude"].GetInt64());
+                    mLocalFcdSet.insert(std::pair<uint64_t,FCDInfo>(tempId,newElem));
+                }
+            }
+        }
+        else{ //payload coming from received Reply
+            for (rapidjson::Value::ConstValueIterator itr = vec.Begin(); itr != vec.End(); ++itr){
+                uint64_t tempId = (*itr)["stationID"].GetInt();
+                FCDInfoSet::iterator iter = mLocalFcdSet.find(tempId);
+                if (iter != mLocalFcdSet.end()){ //element already in list
+                    mLocalFcdSet.erase(iter);
+                    FCDInfo newElem(tempId, (*itr)["latitude"].GetInt64(), (*itr)["longitude"].GetInt64());
+                    mLocalFcdSet.insert(std::pair<uint64_t,FCDInfo>(tempId,newElem));
+                }
+                else{
+                    FCDInfo newElem(tempId, (*itr)["latitude"].GetInt64(), (*itr)["longitude"].GetInt64());
+                    mLocalFcdSet.insert(std::pair<uint64_t,FCDInfo>(tempId,newElem));
+                }
+            }
+        }
+    }
+}
+
+
 void FcdService::callback_request(FcdService* self, int tempId){
     double mLat = 0;
     double mLong = 0;
@@ -512,7 +568,7 @@ void FcdService::callback_request(FcdService* self, int tempId){
         mLong = 5.9450593;
     }
     else if (self->mGlobalConfig.mStationID == 22222){
-        mLat = 49.5044160;
+        mLat = 49.5054160;
         mLong = 5.9450593;
     }
     else if (self->mGlobalConfig.mStationID == 33333){
@@ -600,12 +656,16 @@ void FcdService::callback_reply(FcdService* self, int tempId){
     string condition = "latest";
     string existing_cams = self->requestCam(condition);
 
+    //save CAMs into the local FCD set
+    self->saveInFcdSet(existing_cams);
+
     //HACK: filter the extracted information to fit the MTU
     //TODO: split the data in multiple frames
-    string extracted_payload = self->createPayload(existing_cams);
-    int payload_len = extracted_payload.size()+1;
+    string myPayload = self->createPayload();
+    //string myPayload = self->createPayload(existing_cams);
+    int payload_len = myPayload.size()+1;
     char fcd_from_ldm[payload_len];
-    strcpy(fcd_from_ldm, extracted_payload.c_str());
+    strcpy(fcd_from_ldm, myPayload.c_str());
 
     //create the payload
     Payload_t* payload = static_cast<Payload_t*>(calloc(1, sizeof(Payload_t)));
@@ -637,7 +697,7 @@ void FcdService::callback_reply(FcdService* self, int tempId){
     self->mSenderToDcc->send("FCD", serializedData);
 
     self->mLogger->logInfo("Sending Reply " + to_string(fcdRep->fcdBasicHeader.requestID));
-    self->mLogger->logInfo(extracted_payload);
+    self->mLogger->logInfo(myPayload);
 
     self->mReplied = true;
 }
