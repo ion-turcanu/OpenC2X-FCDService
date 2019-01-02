@@ -122,6 +122,12 @@ private:
 
 	void saveInFcdSet(std::string receivedPayload);
 
+	void saveCollectedFCDsToFile(int msgId, std::string json);
+
+	void saveRequestToFile(FCDREQ_t* request);
+
+	void saveReplyToFile(FCDREQ_t* reply);
+
 	static void callback_request(FcdService* self, int tempId);
 
 	static void callback_reply(FcdService* self, int tempId);
@@ -160,6 +166,8 @@ private:
 	bool mRelayNode;
 	bool mReplied;
 	int mCurHopCount;
+	int64_t mCollectionStartTime;
+	uint64_t myId;
 	//string mMergedFcdSets;
 
 

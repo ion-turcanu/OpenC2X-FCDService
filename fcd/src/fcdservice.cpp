@@ -28,6 +28,7 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     }
 
     mConfig = config;
+    myId = mGlobalConfig.mStationID;
 
     // Logging
     mMsgUtils = new MessageUtils("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
@@ -111,6 +112,8 @@ void FcdService::sendLoop() {
         // Send message
         mSenderToDcc->send("FCD", serializedData);
 
+        mCollectionStartTime = Utils::currentTime();
+
         //cout << "Sending FCD out with ReqID: " << to_string(fcdReq->fcdBasicHeader.requestID) << endl;
         cout << " " << endl;
         mLogger->logInfo("Sending Request " + to_string(fcdReq->fcdBasicHeader.requestID));
@@ -149,7 +152,9 @@ void FcdService::receive() {
         }
         else if(fcd->messageID == messageID_reply){
             mLogger->logInfo("Received Reply " + to_string(fcd->fcdBasicHeader.requestID) + " from sender " + to_string(fcd->fcdBasicHeader.stationID));
-            handleReply(fcd);
+            if (mRelayNode){
+                handleReply(fcd);
+            }
         }
         else{
             mLogger->logError("Received unknown FCD message.");
@@ -197,15 +202,15 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
 
                     double mLat = 0;
                     double mLong = 0;
-                    if (this->mGlobalConfig.mStationID == 11111){
+                    if (myId == 11111){
                         mLat = 49.5034160;
                         mLong = 5.9450593;
                     }
-                    else if (this->mGlobalConfig.mStationID == 22222){
+                    else if (myId == 22222){
                         mLat = 49.5054160;
                         mLong = 5.9450593;
                     }
-                    else if (this->mGlobalConfig.mStationID == 33333){
+                    else if (myId == 33333){
                         mLat = 49.5024160;
                         mLong = 5.9450593;
                     }
@@ -224,7 +229,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
     fcdReq->fcdBasicHeader.protocolVersion = protocolVersion_currentVersion;
     fcdReq->fcdBasicHeader.requestID = reqId;
     fcdReq->fcdBasicHeader.reserved = 0; //TODO: check this value
-    fcdReq->fcdBasicHeader.stationID = mGlobalConfig.mStationID;
+    fcdReq->fcdBasicHeader.stationID = myId;
 
     // FCD request header
     fcdReq->fcdRequestHeader.dMax = mConfig.mMaxDistance;
@@ -254,15 +259,15 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
     //temp hack: these coordinates are hardcoded for testing purposes... to be removed
     double mLat = 0;
     double mLong = 0;
-    if (mGlobalConfig.mStationID == 11111){
+    if (myId == 11111){
         mLat = 49.5034160;
         mLong = 5.9450593;
     }
-    else if (mGlobalConfig.mStationID == 22222){
+    else if (myId == 22222){
         mLat = 49.5054160;
         mLong = 5.9450593;
     }
-    else if (mGlobalConfig.mStationID == 33333){
+    else if (myId == 33333){
         mLat = 49.5024160;
         mLong = 5.9450593;
     }
@@ -318,9 +323,15 @@ void FcdService::handleReply(FCDREQ_t* fcd){
     s << fcd->payload.buf;
     mLogger->logInfo(s.str());
 
+    /*if (mConfig.mIsRSU){
+        mLogger->logInfo("Saving the received FCDs to file.");
+        saveCollectedFCDsToFile(fcd->fcdBasicHeader.requestID, s.str());
+    }*/
+
     if (!mReplied){
         saveInFcdSet(s.str());
         cout << "Merged FCDs: " << createPayload() << endl;
+        saveReplyToFile(fcd);
     }
     else{
         mLogger->logInfo("Already replied: do nothing.");
@@ -560,18 +571,60 @@ void FcdService::saveInFcdSet(std::string payload){
 }
 
 
+void FcdService::saveCollectedFCDsToFile(int msgId, std::string json){
+    std::ofstream output;
+    output.open ("collected-fcds.dat", std::ofstream::out | std::ofstream::app);
+    int64_t collection_delay = Utils::currentTime() - mCollectionStartTime; //nanoseconds
+    output << to_string(msgId) + "   " + to_string(collection_delay) + "   " + json + "\n";
+    output.close();
+}
+
+
+void FcdService::saveRequestToFile(FCDREQ_t* request){
+    mLogger->logInfo("Saving the received REQUEST to file.");
+    std::ofstream output;
+    output.open ("received-requests.dat", std::ofstream::out | std::ofstream::app);
+    int64_t curr_time = Utils::currentTime();
+    //cout << ">> Current time: " << curr_time <<endl;
+    int64_t gen_time;
+    memcpy(&gen_time, request->fcdRequestHeader.generationTime.buf, 6);
+    //cout << ">> Generation time: " << gen_time <<endl;
+    //cout << ">> Buffer content: " << request->fcdRequestHeader.generationTime.buf <<endl;
+    //int64_t delay = curr_time - gen_time; //nanoseconds
+    //output << "MyID   SenderID   RequestID   Longitude   Latitude   HopNumber   CurrentTime   GenerationTime   RelayNode\n";
+    output << to_string(myId) + "   " + to_string(request->fcdBasicHeader.stationID) + "   " + to_string(request->fcdBasicHeader.requestID) +
+     "   " + to_string(request->fcdRequestHeader.longitude) + "   " + to_string(request->fcdRequestHeader.latitude) + 
+     "   " + to_string(request->fcdRequestHeader.hCur) + "   " + to_string(curr_time) + "   " + to_string(gen_time) +
+     "   " + to_string(!isInhibited(request->fcdBasicHeader.requestID)) + "\n";
+    output.close();
+}
+
+
+void FcdService::saveReplyToFile(FCDREQ_t* reply){
+    mLogger->logInfo("Saving the received REPLY to file.");
+    std::stringstream s;
+    s << reply->payload.buf;
+    std::ofstream output;
+    output.open ("received-replies.dat", std::ofstream::out | std::ofstream::app);
+    int64_t collection_delay = Utils::currentTime() - mCollectionStartTime; //nanoseconds
+    output << to_string(myId) + "   " + to_string(reply->fcdBasicHeader.stationID) + "   " + to_string(reply->fcdBasicHeader.requestID) +
+    "   " + to_string(collection_delay) + "   " + s.str() + "\n";
+    output.close();
+}
+
+
 void FcdService::callback_request(FcdService* self, int tempId){
     double mLat = 0;
     double mLong = 0;
-    if (self->mGlobalConfig.mStationID == 11111){
+    if (self->myId == 11111){
         mLat = 49.5034160;
         mLong = 5.9450593;
     }
-    else if (self->mGlobalConfig.mStationID == 22222){
+    else if (self->myId == 22222){
         mLat = 49.5054160;
         mLong = 5.9450593;
     }
-    else if (self->mGlobalConfig.mStationID == 33333){
+    else if (self->myId == 33333){
         mLat = 49.5024160;
         mLong = 5.9450593;
     }
@@ -579,6 +632,7 @@ void FcdService::callback_request(FcdService* self, int tempId){
     FcdMsgInfo_table::iterator it = self->reqMap.find(tempId);
     if (it != self->reqMap.end()){
         //if (it->second.getCopies() == 1){
+        self->saveRequestToFile(it->second.getReqMsg());
         if (!self->isInhibited(tempId)){
             self->mLogger->logInfo("REQUEST timer expired.");
             self->mRelayNode = true;
@@ -592,7 +646,7 @@ void FcdService::callback_request(FcdService* self, int tempId){
                             
             FCDREQ_t* toForward = it->second.getReqMsg();
             toForward->fcdRequestHeader.generationTime = *timestamp;
-            toForward->fcdBasicHeader.stationID = self->mGlobalConfig.mStationID;
+            toForward->fcdBasicHeader.stationID = self->myId;
             self->mMutexLatestGps.lock();
             if(self->mLatestGps.has_time()) {	//only add gps if valid data is available
                 toForward->fcdRequestHeader.latitude = self->mLatestGps.latitude() * 10000000; // in one-tenth of microdegrees
