@@ -52,7 +52,7 @@ LDM::LDM(string globalConfig, string loggingConf, string statisticConf) {
 	mLogger = new LoggingUtility(moduleName, config.mExpNo, loggingConf, statisticConf);
 
 	//open SQLite database
-	if(sqlite3_open_v2(("../db/ldm-" + to_string(config.mExpNo) + ".db").c_str(), &mDb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, NULL)) {
+	if(sqlite3_open_v2(("../db/ldm-" + to_string(config.mExpNo) + "-" + to_string(config.mStationID) + ".db").c_str(), &mDb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, NULL)) {
 		mLogger->logError("Cannot open database");
 		sqlite3_close(mDb);
 	}

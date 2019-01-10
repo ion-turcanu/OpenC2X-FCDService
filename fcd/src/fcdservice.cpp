@@ -29,6 +29,9 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
 
     mConfig = config;
     myId = mGlobalConfig.mStationID;
+    mRelayNode = false;
+    mReplied = false;
+    mExpNum = mGlobalConfig.mExpNo;
 
     // Logging
     mMsgUtils = new MessageUtils("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
@@ -50,6 +53,8 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     mThreadReceiver = new boost::thread(&FcdService::receive, this);
     mThreadGpsDataReceive = new boost::thread(&FcdService::receiveGpsData, this);
 	mThreadObd2DataReceive = new boost::thread(&FcdService::receiveObd2Data, this);
+
+    initializeResultFiles();
 }
 
 
@@ -120,6 +125,8 @@ void FcdService::sendLoop() {
 
         updateCopy(fcdReq);
 
+        saveRequestToFile(fcdReq);
+
         // Wait for txInterval seconds
         boost::this_thread::sleep(boost::posix_time::seconds(mConfig.mTxInterval));
         
@@ -152,7 +159,7 @@ void FcdService::receive() {
         }
         else if(fcd->messageID == messageID_reply){
             mLogger->logInfo("Received Reply " + to_string(fcd->fcdBasicHeader.requestID) + " from sender " + to_string(fcd->fcdBasicHeader.stationID));
-            if (mRelayNode){
+            if (mRelayNode || mConfig.mIsRSU){
                 handleReply(fcd);
             }
         }
@@ -214,6 +221,14 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
                         mLat = 49.5024160;
                         mLong = 5.9450593;
                     }
+                    else if (myId == 44444){
+                        mLat = 49.5064160;
+                        mLong = 5.9450593;
+                    }
+                    else if (myId == 55555){
+                        mLat = 49.5074160;
+                        mLong = 5.9450593;
+                    }
 
     int64_t currTime = Utils::currentTime();
     // Seems like ASN1 supports 32 bit int (strange) and timestamp needs 42 bits.
@@ -271,6 +286,14 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
         mLat = 49.5024160;
         mLong = 5.9450593;
     }
+    else if (myId == 44444){
+        mLat = 49.5064160;
+        mLong = 5.9450593;
+    }
+    else if (myId == 55555){
+        mLat = 49.5074160;
+        mLong = 5.9450593;
+    }
 
     double rcvdLat = fcd->fcdRequestHeader.latitude/(double)10000000;
     double rcvdLong = fcd->fcdRequestHeader.longitude/(double)10000000;
@@ -310,6 +333,7 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
         }
         else{
             mLogger->logInfo("Not the first copy.");
+            saveRequestCopyToFile(fcd);
         }
     }
     else{
@@ -571,31 +595,73 @@ void FcdService::saveInFcdSet(std::string payload){
 }
 
 
-void FcdService::saveCollectedFCDsToFile(int msgId, std::string json){
-    std::ofstream output;
-    output.open ("collected-fcds.dat", std::ofstream::out | std::ofstream::app);
-    int64_t collection_delay = Utils::currentTime() - mCollectionStartTime; //nanoseconds
-    output << to_string(msgId) + "   " + to_string(collection_delay) + "   " + json + "\n";
-    output.close();
+void FcdService::initializeResultFiles(){
+    saveConfigurationToFile();
+
+    std::string reqFileName = "exp"+to_string(mExpNum)+"-"+to_string(myId)+"-requests.dat";
+    if (fexists(reqFileName)){
+        if (remove(reqFileName.c_str()) != 0)
+            mLogger->logInfo( "Error deleting file " + reqFileName);
+        else
+            mLogger->logInfo( "File " + reqFileName +" successfully deleted" );
+    }
+    std::ofstream req_output;
+    req_output.open (reqFileName, std::ofstream::out | std::ofstream::app);
+    req_output << "ExpID   MyID   SenderID   RequestID   Longitude   Latitude   HopNumber   CurrentTime   GenerationTime   RelayNode\n";
+    req_output.close();
+
+    std::string repFileName = "exp"+to_string(mExpNum)+"-"+to_string(myId)+"-replies.dat";
+    if (fexists(repFileName)){
+        if (remove(repFileName.c_str()) != 0)
+            mLogger->logInfo( "Error deleting file " + repFileName);
+        else
+            mLogger->logInfo( "File " + repFileName +" successfully deleted" );
+    }
+    std::ofstream rep_output;
+    rep_output.open (repFileName, std::ofstream::out | std::ofstream::app);
+    rep_output << "ExpID   MyID   SenderID   RequestID   CollectionDelay   FCD\n";
+    rep_output.close();
+
+    std::string reqCopyFileName = "exp"+to_string(mExpNum)+"-"+to_string(myId)+"-reqcopies.dat";
+    if (fexists(reqCopyFileName)){
+        if (remove(reqCopyFileName.c_str()) != 0)
+            mLogger->logInfo( "Error deleting file " + reqCopyFileName);
+        else
+            mLogger->logInfo( "File " + reqCopyFileName +" successfully deleted" );
+    }
+    std::ofstream reqcopy_output;
+    reqcopy_output.open (reqCopyFileName, std::ofstream::out | std::ofstream::app);
+    reqcopy_output << "ExpID   MyID   SenderID   RequestID   Longitude   Latitude   HopNumber   CurrentTime   GenerationTime   RelayNode\n";
+    reqcopy_output.close();
 }
 
 
 void FcdService::saveRequestToFile(FCDREQ_t* request){
     mLogger->logInfo("Saving the received REQUEST to file.");
     std::ofstream output;
-    output.open ("received-requests.dat", std::ofstream::out | std::ofstream::app);
+    output.open ("exp"+to_string(mExpNum)+"-"+to_string(myId)+"-requests.dat", std::ofstream::out | std::ofstream::app);
     int64_t curr_time = Utils::currentTime();
-    //cout << ">> Current time: " << curr_time <<endl;
     int64_t gen_time;
     memcpy(&gen_time, request->fcdRequestHeader.generationTime.buf, 6);
-    //cout << ">> Generation time: " << gen_time <<endl;
-    //cout << ">> Buffer content: " << request->fcdRequestHeader.generationTime.buf <<endl;
-    //int64_t delay = curr_time - gen_time; //nanoseconds
-    //output << "MyID   SenderID   RequestID   Longitude   Latitude   HopNumber   CurrentTime   GenerationTime   RelayNode\n";
-    output << to_string(myId) + "   " + to_string(request->fcdBasicHeader.stationID) + "   " + to_string(request->fcdBasicHeader.requestID) +
-     "   " + to_string(request->fcdRequestHeader.longitude) + "   " + to_string(request->fcdRequestHeader.latitude) + 
-     "   " + to_string(request->fcdRequestHeader.hCur) + "   " + to_string(curr_time) + "   " + to_string(gen_time) +
-     "   " + to_string(!isInhibited(request->fcdBasicHeader.requestID)) + "\n";
+    output << to_string(mExpNum) + "   " + to_string(myId) + "   " + to_string(request->fcdBasicHeader.stationID) + 
+        "   " + to_string(request->fcdBasicHeader.requestID) + "   " + to_string(request->fcdRequestHeader.longitude) + 
+        "   " + to_string(request->fcdRequestHeader.latitude) + "   " + to_string(request->fcdRequestHeader.hCur) + "   " + to_string(curr_time) +
+        "   " + to_string(gen_time) + "   " + to_string(!isInhibited(request->fcdBasicHeader.requestID)) + "\n";
+    output.close();
+}
+
+
+void FcdService::saveRequestCopyToFile(FCDREQ_t* request){
+    mLogger->logInfo("Saving the received REQUEST Copy to file.");
+    std::ofstream output;
+    output.open ("exp"+to_string(mExpNum)+"-"+to_string(myId)+"-reqcopies.dat", std::ofstream::out | std::ofstream::app);
+    int64_t curr_time = Utils::currentTime();
+    int64_t gen_time;
+    memcpy(&gen_time, request->fcdRequestHeader.generationTime.buf, 6);
+    output << to_string(mExpNum) + "   " + to_string(myId) + "   " + to_string(request->fcdBasicHeader.stationID) + 
+        "   " + to_string(request->fcdBasicHeader.requestID) + "   " + to_string(request->fcdRequestHeader.longitude) + 
+        "   " + to_string(request->fcdRequestHeader.latitude) + "   " + to_string(request->fcdRequestHeader.hCur) + "   " + to_string(curr_time) +
+        "   " + to_string(gen_time) + "   " + to_string(!isInhibited(request->fcdBasicHeader.requestID)) + "\n";
     output.close();
 }
 
@@ -605,11 +671,29 @@ void FcdService::saveReplyToFile(FCDREQ_t* reply){
     std::stringstream s;
     s << reply->payload.buf;
     std::ofstream output;
-    output.open ("received-replies.dat", std::ofstream::out | std::ofstream::app);
+    output.open ("exp"+to_string(mExpNum)+"-"+to_string(myId)+"-replies.dat", std::ofstream::out | std::ofstream::app);
     int64_t collection_delay = Utils::currentTime() - mCollectionStartTime; //nanoseconds
-    output << to_string(myId) + "   " + to_string(reply->fcdBasicHeader.stationID) + "   " + to_string(reply->fcdBasicHeader.requestID) +
-    "   " + to_string(collection_delay) + "   " + s.str() + "\n";
+    output << to_string(mExpNum) + "   " + to_string(myId) + "   " + to_string(reply->fcdBasicHeader.stationID) +
+        "   " + to_string(reply->fcdBasicHeader.requestID) + "   " + to_string(collection_delay) + "   " + s.str() + "\n";
     output.close();
+}
+
+
+void FcdService::saveConfigurationToFile(){
+    mLogger->logInfo("Saving the CONFIGURATION to file.");
+    std::string fileName = "exp"+to_string(mExpNum)+"-"+to_string(myId)+"-config.dat";
+    if (fexists(fileName)){
+        if (remove(fileName.c_str()) != 0)
+            mLogger->logInfo( "Error deleting file " + fileName);
+        else
+            mLogger->logInfo( "File " + fileName +" successfully deleted" );
+    }
+    std::ofstream output;
+    output.open (fileName, std::ofstream::out | std::ofstream::app);
+    output << "ExpID   MyID   TxInterval   MaxDistance   MaxHops   MaxReqTimer   MaxRepTimer   IsRSU\n";
+    output << to_string(mExpNum) + "   " + to_string(mGlobalConfig.mStationID) + "   " + to_string(mConfig.mTxInterval) +
+        "   " + to_string(mConfig.mMaxDistance) + "   " + to_string(mConfig.mMaxHops) + "   " + to_string(mConfig.mMaxRequestTimer) + 
+        "   " + to_string(mConfig.mMaxReplyTimer) + "   " + to_string(mConfig.mIsRSU) + "\n";
 }
 
 
@@ -626,6 +710,14 @@ void FcdService::callback_request(FcdService* self, int tempId){
     }
     else if (self->myId == 33333){
         mLat = 49.5024160;
+        mLong = 5.9450593;
+    }
+    else if (self->myId == 44444){
+        mLat = 49.5064160;
+        mLong = 5.9450593;
+    }
+    else if (self->myId == 55555){
+        mLat = 49.5074160;
         mLong = 5.9450593;
     }
 
@@ -754,6 +846,12 @@ void FcdService::callback_reply(FcdService* self, int tempId){
     self->mLogger->logInfo(myPayload);
 
     self->mReplied = true;
+}
+
+
+bool FcdService::fexists(const std::string& filename) {
+  std::ifstream ifile(filename.c_str());
+  return (bool)ifile;
 }
 
 

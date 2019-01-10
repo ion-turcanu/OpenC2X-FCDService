@@ -27,6 +27,7 @@
 #include "external/rapidjson/writer.h"
 #include "external/rapidjson/stringbuffer.h"
 #include <iostream>
+#include <stdio.h>
 
 
 /** Struct that hold the configuration for FcdService.
@@ -122,12 +123,18 @@ private:
 
 	void saveInFcdSet(std::string receivedPayload);
 
-	void saveCollectedFCDsToFile(int msgId, std::string json);
+	void initializeResultFiles();
+
+	void saveConfigurationToFile();
 
 	void saveRequestToFile(FCDREQ_t* request);
+	
+	void saveRequestCopyToFile(FCDREQ_t* request);
 
 	void saveReplyToFile(FCDREQ_t* reply);
 
+	bool fexists(const std::string& filename);
+	
 	static void callback_request(FcdService* self, int tempId);
 
 	static void callback_reply(FcdService* self, int tempId);
@@ -166,6 +173,7 @@ private:
 	bool mRelayNode;
 	bool mReplied;
 	int mCurHopCount;
+	int mExpNum;
 	int64_t mCollectionStartTime;
 	uint64_t myId;
 	//string mMergedFcdSets;
