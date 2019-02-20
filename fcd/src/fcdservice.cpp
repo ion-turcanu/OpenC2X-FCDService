@@ -32,6 +32,7 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     mRelayNode = false;
     mReplied = false;
     mExpNum = mGlobalConfig.mExpNo;
+    mRequests = mConfig.mNrOfRequests;
 
     // Logging
     mMsgUtils = new MessageUtils("FcdService", mGlobalConfig.mExpNo, logConf, statConf);
@@ -53,6 +54,8 @@ FcdService::FcdService(FcdServiceConfig &config, string globalConfig, string log
     mThreadReceiver = new boost::thread(&FcdService::receive, this);
     mThreadGpsDataReceive = new boost::thread(&FcdService::receiveGpsData, this);
 	mThreadObd2DataReceive = new boost::thread(&FcdService::receiveObd2Data, this);
+
+    srand (time(NULL));
 
     initializeResultFiles();
 }
@@ -93,8 +96,8 @@ FcdService::~FcdService() {
 void FcdService::sendLoop() {
     int counter = 0;
 
-    // Endless loop that sends every second an FCD message
-    while(1) {
+    // Loop that sends every t seconds an FCD message
+    while(counter <= mRequests) {
         string serializedData;
         dataPackage::DATA data;
 
@@ -126,6 +129,8 @@ void FcdService::sendLoop() {
         updateCopy(fcdReq);
 
         saveRequestToFile(fcdReq);
+
+        mLocalFcdSet.clear();
 
         // Wait for txInterval seconds
         boost::this_thread::sleep(boost::posix_time::seconds(mConfig.mTxInterval));
@@ -207,7 +212,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
 		throw runtime_error("could not allocate FCDREQ_t");
 	}
 
-                    double mLat = 0;
+                    /*double mLat = 0;
                     double mLong = 0;
                     if (myId == 11111){
                         mLat = 49.5034160;
@@ -228,7 +233,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
                     else if (myId == 55555){
                         mLat = 49.5074160;
                         mLong = 5.9450593;
-                    }
+                    }*/
 
     int64_t currTime = Utils::currentTime();
     // Seems like ASN1 supports 32 bit int (strange) and timestamp needs 42 bits.
@@ -256,11 +261,11 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
 		fcdReq->fcdRequestHeader.longitude = mLatestGps.longitude() * 10000000; // in one-tenth of microdegrees
 		fcdReq->fcdRequestHeader.altitude.altitudeValue = mLatestGps.altitude();
 	} else {
-        //fcdReq->fcdRequestHeader.latitude = Latitude_unavailable;
-        //fcdReq->fcdRequestHeader.longitude = Longitude_unavailable;
+        fcdReq->fcdRequestHeader.latitude = Latitude_unavailable;
+        fcdReq->fcdRequestHeader.longitude = Longitude_unavailable;
         fcdReq->fcdRequestHeader.altitude.altitudeValue = AltitudeValue_unavailable;
-        fcdReq->fcdRequestHeader.latitude = mLat * 10000000;
-        fcdReq->fcdRequestHeader.longitude = mLong * 10000000;
+        //fcdReq->fcdRequestHeader.latitude = mLat * 10000000;
+        //fcdReq->fcdRequestHeader.longitude = mLong * 10000000;
 	}
 	mMutexLatestGps.unlock();
     fcdReq->fcdRequestHeader.tMaxRep = mConfig.mMaxReplyTimer; // in milliseconds
@@ -272,7 +277,7 @@ FCDREQ_t* FcdService::generateFcd(int reqId) {
 
 void FcdService::handleRequest(FCDREQ_t* fcd){
     //temp hack: these coordinates are hardcoded for testing purposes... to be removed
-    double mLat = 0;
+    /*double mLat = 0;
     double mLong = 0;
     if (myId == 11111){
         mLat = 49.5034160;
@@ -293,15 +298,15 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
     else if (myId == 55555){
         mLat = 49.5074160;
         mLong = 5.9450593;
-    }
+    }*/
 
     double rcvdLat = fcd->fcdRequestHeader.latitude/(double)10000000;
     double rcvdLong = fcd->fcdRequestHeader.longitude/(double)10000000;
 
-    //mLogger->logInfo("My Lat: " + to_string(mLat) + " | My Long: " + to_string(mLong));
+    //mLogger->logInfo("My Lat: " + to_string(mLatestGps.latitude()) + " | My Long: " + to_string(mLatestGps.longitude()));
     //mLogger->logInfo("Rec Lat: " + to_string(rcvdLat) + " | Rec Long: " + to_string(rcvdLong));
-    //double mDist = getDistance(mLatestGps.latitude(),mLatestGps.longitude(),fcd->fcdRequestHeader.latitude/10000000,fcd->fcdRequestHeader.longitude/10000000);
-    double mDist = getDistance(mLat,mLong,rcvdLat,rcvdLong);
+    double mDist = getDistance(mLatestGps.latitude(),mLatestGps.longitude(),rcvdLat,rcvdLong);
+    //double mDist = getDistance(mLat,mLong,rcvdLat,rcvdLong);
     mLogger->logInfo("Distance from sender: " + to_string(mDist));
 
     if (mDist < fcd->fcdRequestHeader.dMax){
@@ -318,7 +323,7 @@ void FcdService::handleRequest(FCDREQ_t* fcd){
 
             if (mCurHopCount <= fcd->fcdRequestHeader.hMax){
                 //schedule self-timer
-                int64_t request_timer = fcd->fcdRequestHeader.tMaxReq * (1 - (mDist / (double)fcd->fcdRequestHeader.dMax));
+                int64_t request_timer = fcd->fcdRequestHeader.tMaxReq * (0.8*(1 - (mDist / (double)fcd->fcdRequestHeader.dMax)) + 0.2*getRandomNumber());
                 mLogger->logInfo("Request Timer = " + to_string(request_timer) + "ms");
 
                 int tempId = fcd->fcdBasicHeader.requestID;
@@ -354,8 +359,10 @@ void FcdService::handleReply(FCDREQ_t* fcd){
 
     if (!mReplied){
         saveInFcdSet(s.str());
-        cout << "Merged FCDs: " << createPayload() << endl;
-        saveReplyToFile(fcd);
+        std::string mergedPayload = createPayload();
+        cout << "Merged FCDs: " << mergedPayload << endl;
+        //saveReplyToFile(fcd);
+        saveRepliesToFile(fcd, mergedPayload);
     }
     else{
         mLogger->logInfo("Already replied: do nothing.");
@@ -619,7 +626,7 @@ void FcdService::initializeResultFiles(){
     }
     std::ofstream rep_output;
     rep_output.open (repFileName, std::ofstream::out | std::ofstream::app);
-    rep_output << "ExpID   MyID   SenderID   RequestID   CollectionDelay   FCD\n";
+    rep_output << "ExpID   MyID   SenderID   RequestID   CollectionDelay   RcvdFCD   MergedFCDs\n";
     rep_output.close();
 
     std::string reqCopyFileName = "exp"+to_string(mExpNum)+"-"+to_string(myId)+"-reqcopies.dat";
@@ -666,7 +673,7 @@ void FcdService::saveRequestCopyToFile(FCDREQ_t* request){
 }
 
 
-void FcdService::saveReplyToFile(FCDREQ_t* reply){
+/*void FcdService::saveReplyToFile(FCDREQ_t* reply){
     mLogger->logInfo("Saving the received REPLY to file.");
     std::stringstream s;
     s << reply->payload.buf;
@@ -675,6 +682,19 @@ void FcdService::saveReplyToFile(FCDREQ_t* reply){
     int64_t collection_delay = Utils::currentTime() - mCollectionStartTime; //nanoseconds
     output << to_string(mExpNum) + "   " + to_string(myId) + "   " + to_string(reply->fcdBasicHeader.stationID) +
         "   " + to_string(reply->fcdBasicHeader.requestID) + "   " + to_string(collection_delay) + "   " + s.str() + "\n";
+    output.close();
+}*/
+
+
+void FcdService::saveRepliesToFile(FCDREQ_t* reply, std::string mergedPayload){
+    mLogger->logInfo("Saving the received REPLY to file.");
+    std::stringstream s;
+    s << reply->payload.buf;
+    std::ofstream output;
+    output.open ("exp"+to_string(mExpNum)+"-"+to_string(myId)+"-replies.dat", std::ofstream::out | std::ofstream::app);
+    int64_t collection_delay = Utils::currentTime() - mCollectionStartTime; //nanoseconds
+    output << to_string(mExpNum) + "   " + to_string(myId) + "   " + to_string(reply->fcdBasicHeader.stationID) +
+        "   " + to_string(reply->fcdBasicHeader.requestID) + "   " + to_string(collection_delay) + "   " + s.str() + "   " + mergedPayload + "\n";
     output.close();
 }
 
@@ -697,8 +717,16 @@ void FcdService::saveConfigurationToFile(){
 }
 
 
+double FcdService::getRandomNumber(){
+    //return rand() / double(RAND_MAX);
+    double result = rand() / double(RAND_MAX);
+    mLogger->logInfo( "Generated random number " + to_string(result));
+    return result;
+}
+
+
 void FcdService::callback_request(FcdService* self, int tempId){
-    double mLat = 0;
+    /*double mLat = 0;
     double mLong = 0;
     if (self->myId == 11111){
         mLat = 49.5034160;
@@ -719,7 +747,7 @@ void FcdService::callback_request(FcdService* self, int tempId){
     else if (self->myId == 55555){
         mLat = 49.5074160;
         mLong = 5.9450593;
-    }
+    }*/
 
     FcdMsgInfo_table::iterator it = self->reqMap.find(tempId);
     if (it != self->reqMap.end()){
@@ -745,11 +773,11 @@ void FcdService::callback_request(FcdService* self, int tempId){
                 toForward->fcdRequestHeader.longitude = self->mLatestGps.longitude() * 10000000; // in one-tenth of microdegrees
                 toForward->fcdRequestHeader.altitude.altitudeValue = self->mLatestGps.altitude();
             } else {
-                //toForward->fcdRequestHeader.latitude = Latitude_unavailable;
-                //toForward->fcdRequestHeader.longitude = Longitude_unavailable;
+                toForward->fcdRequestHeader.latitude = Latitude_unavailable;
+                toForward->fcdRequestHeader.longitude = Longitude_unavailable;
                 toForward->fcdRequestHeader.altitude.altitudeValue = AltitudeValue_unavailable;
-                toForward->fcdRequestHeader.latitude = mLat * 10000000;
-                toForward->fcdRequestHeader.longitude = mLong * 10000000;
+                //toForward->fcdRequestHeader.latitude = mLat * 10000000;
+                //toForward->fcdRequestHeader.longitude = mLong * 10000000;
             }
             self->mMutexLatestGps.unlock();
             toForward->fcdRequestHeader.hCur = self->mCurHopCount;
@@ -780,7 +808,8 @@ void FcdService::callback_request(FcdService* self, int tempId){
             auto call_reply = boost::bind(FcdService::callback_reply,self,tempId);
 
             //TODO: add a random factor to avoid synchronized transmissions
-            int64_t reply_timer = toForward->fcdRequestHeader.tMaxRep * (1 - (self->mCurHopCount / (double)toForward->fcdRequestHeader.hMax));
+            int64_t reply_timer = toForward->fcdRequestHeader.tMaxRep * (1 - (self->mCurHopCount / (double)toForward->fcdRequestHeader.hMax)) +
+                                        toForward->fcdRequestHeader.tMaxReq * (toForward->fcdRequestHeader.hMax - self->mCurHopCount);
             self->mLogger->logInfo("Reply Timer = " + to_string(reply_timer) + "ms");
             Timer* tReply = new Timer(call_reply,boost::chrono::milliseconds(reply_timer),true);
             tReply->start(true);

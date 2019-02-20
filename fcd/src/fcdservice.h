@@ -35,6 +35,7 @@
  */
 struct FcdServiceConfig {
     int mTxInterval;
+	int mNrOfRequests;
 	int mMaxDistance;
 	int mMaxHops;
 	double mMaxRequestTimer;
@@ -47,6 +48,7 @@ struct FcdServiceConfig {
 		read_xml(filename, pt);
 
 		mTxInterval = pt.get("fcd.txInterval", 10);
+		mNrOfRequests = pt.get("fcd.nrOfRequests", 10);
         mMaxDistance = pt.get("fcd.maxDistance", 100);
 		mMaxHops = pt.get("fcd.maxHops", 2);
 		mMaxRequestTimer = pt.get("fcd.maxRequestTimer", 0.1);
@@ -113,6 +115,8 @@ private:
 
 	int getCurrentHopCount(int msgId);
 
+	double getRandomNumber();
+
 	bool isInhibited(int msgId);
 
 	std::string createPayload();
@@ -131,7 +135,9 @@ private:
 	
 	void saveRequestCopyToFile(FCDREQ_t* request);
 
-	void saveReplyToFile(FCDREQ_t* reply);
+	//void saveReplyToFile(FCDREQ_t* reply);
+
+	void saveRepliesToFile(FCDREQ_t* reply, std::string mergedPayload);
 
 	bool fexists(const std::string& filename);
 	
@@ -174,6 +180,7 @@ private:
 	bool mReplied;
 	int mCurHopCount;
 	int mExpNum;
+	int mRequests;
 	int64_t mCollectionStartTime;
 	uint64_t myId;
 	//string mMergedFcdSets;
