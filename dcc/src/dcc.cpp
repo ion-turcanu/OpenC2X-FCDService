@@ -94,6 +94,8 @@ DCC::DCC(DccConfig &config, string globalConfig, string loggingConf, string stat
 	}
 	mStatIdx = 0;
 	mLogger->logStats("Index \tChannel Load \tFlush req in BE \tFlush not req in BE \tFlush req in BE in last 1 sec \tFlush not req in BE in last 1 sec");
+
+	initializeResultFiles();
 }
 
 DCC::~DCC() {
@@ -363,6 +365,7 @@ void DCC::receiveFromHw2() {
 			case dataPackage::DATA_Type_FCD:
 				mSenderToServices->send("FCD", *serializedData);
 				mLogger->logInfo("forward received FCD from source "+ pktInfo->mSenderMac +" to services");
+				saveBytesToFile(pktInfo->mRcvdBytes);
 				break;
 			default:
 				break;
@@ -647,6 +650,33 @@ double DCC::currentCarrierSense(Channels::t_access_category ac) {
 void onSigTermOk(int sig) {
 	cout << "Signal " << sig << " received. Requesting exit." << endl;
 	exit(0);
+}
+
+void DCC::initializeResultFiles(){
+    std::string fileName = "exp"+to_string(mGlobalConfig.mExpNo)+"-"+to_string(mGlobalConfig.mStationID)+"-bytes.dat";
+    if (fexists(fileName)){
+        if (remove(fileName.c_str()) != 0)
+            mLogger->logInfo( "Error deleting file " + fileName);
+        else
+            mLogger->logInfo( "File " + fileName +" successfully deleted" );
+    }
+    std::ofstream output;
+    output.open (fileName, std::ofstream::out | std::ofstream::app);
+    output << "ExpID   MyID   ReceivedBytes\n";
+    output.close();
+}
+
+void DCC::saveBytesToFile(int bytes){
+    //mLogger->logInfo("Saving the received REPLY to file.");
+    std::ofstream output;
+    output.open ("exp"+to_string(mGlobalConfig.mExpNo)+"-"+to_string(mGlobalConfig.mStationID)+"-bytes.dat", std::ofstream::out | std::ofstream::app);
+    output << to_string(mGlobalConfig.mExpNo) + "   " + to_string(mGlobalConfig.mStationID) + "   " + to_string(bytes) + "\n";
+    output.close();
+}
+
+bool DCC::fexists(const std::string& filename) {
+  std::ifstream ifile(filename.c_str());
+  return (bool)ifile;
 }
 
 int main(int argc, const char* argv[]) {

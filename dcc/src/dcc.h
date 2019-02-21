@@ -218,6 +218,13 @@ private:
 	/**
 	 * All used access categories (ACs): VI, VO, BE, BK.
 	 */
+
+	void initializeResultFiles();
+
+	void saveBytesToFile(int bytes);
+
+	bool fexists(const std::string& filename);
+
 	const Channels::t_access_category mAccessCategories[4] = {Channels::AC_VI, Channels::AC_VO, Channels::AC_BE, Channels::AC_BK};	//all used ACs
 
 	CommunicationReceiver* mReceiverFromCa;

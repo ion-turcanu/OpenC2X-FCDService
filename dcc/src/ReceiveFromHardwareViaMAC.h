@@ -42,6 +42,7 @@
 struct ReceivedPacketInfo {
 	std::string mSenderMac;
 	dataPackage::DATA_Type mType;
+	int mRcvdBytes;
 };
 
 

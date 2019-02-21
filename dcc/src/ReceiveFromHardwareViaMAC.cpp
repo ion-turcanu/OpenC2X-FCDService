@@ -135,6 +135,7 @@ pair<ReceivedPacketInfo, string> ReceiveFromHardwareViaMAC::receiveWithGeoNetHea
 			ReceivedPacketInfo info;
 			info.mSenderMac = senderMac;
 			info.mType = dataPackage::DATA_Type_FCD;
+			info.mRcvdBytes = mBytes;
 			return make_pair(info, msg);
 		} else {
 			// TODO: Possible cases?
