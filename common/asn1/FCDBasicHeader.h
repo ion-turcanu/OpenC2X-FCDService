@@ -31,6 +31,7 @@ typedef struct FCDBasicHeader {
 	long	 protocolVersion;
 	long	 reserved;
 	StationID_t	 stationID;
+	StationID_t	 originatorID;
 	RequestID_t	 requestID;
 	
 	/* Context for parsing across buffer boundaries */

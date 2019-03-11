@@ -41,6 +41,7 @@ struct FcdServiceConfig {
 	double mMaxRequestTimer;
 	double mMaxReplyTimer;
 	bool mIsRSU;
+	bool mIsBaseline;
 	int mTimeout;
 
 	void loadConfigXML(const std::string &filename) {
@@ -54,6 +55,7 @@ struct FcdServiceConfig {
 		mMaxRequestTimer = pt.get("fcd.maxRequestTimer", 0.1);
 		mMaxReplyTimer = pt.get("fcd.maxReplyTimer", 1);
 		mIsRSU = pt.get("fcd.isRSU", false);
+		mIsBaseline = pt.get("fcd.isBaseline", false);
 
 		mTimeout = pt.get("fcd.timeout", 100);
 	}
@@ -120,6 +122,8 @@ private:
 	bool isInhibited(int msgId);
 
 	std::string createPayload();
+	
+	std::string createBaselinePayload();
 
 	std::string requestCam(std::string condition);
 
@@ -184,6 +188,7 @@ private:
 	int64_t mCollectionStartTime;
 	uint64_t myId;
 	//string mMergedFcdSets;
+	std::set<int> mSentReplies;
 
 
 	class FCDRequestInfo{

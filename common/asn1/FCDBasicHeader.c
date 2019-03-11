@@ -95,8 +95,17 @@ static asn_TYPE_member_t asn_MBR_FCDBasicHeader_1[] = {
 		0,
 		"stationID"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct FCDBasicHeader, requestID),
+	{ ATF_NOFLAGS, 0, offsetof(struct FCDBasicHeader, originatorID),
 		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
+		-1,	/* IMPLICIT tag at current level */
+		&asn_DEF_StationID,
+		0,	/* Defer constraints checking to the member type */
+		0,	/* No PER visible constraints */
+		0,
+		"originatorID"
+		},
+	{ ATF_NOFLAGS, 0, offsetof(struct FCDBasicHeader, requestID),
+		(ASN_TAG_CLASS_CONTEXT | (4 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_RequestID,
 		0,	/* Defer constraints checking to the member type */
@@ -112,13 +121,14 @@ static asn_TYPE_tag2member_t asn_MAP_FCDBasicHeader_tag2el_1[] = {
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* protocolVersion at 297 */
     { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* reserved at 299 */
     { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* stationID at 300 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 } /* requestID at 302 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 }, /* originatorID at 301 */
+    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 } /* requestID at 303 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_FCDBasicHeader_specs_1 = {
 	sizeof(struct FCDBasicHeader),
 	offsetof(struct FCDBasicHeader, _asn_ctx),
 	asn_MAP_FCDBasicHeader_tag2el_1,
-	4,	/* Count of tags in the map */
+	5,	/* Count of tags in the map */
 	0, 0, 0,	/* Optional elements (not needed) */
 	-1,	/* Start extensions */
 	-1	/* Stop extensions */
@@ -144,7 +154,7 @@ asn_TYPE_descriptor_t asn_DEF_FCDBasicHeader = {
 		/sizeof(asn_DEF_FCDBasicHeader_tags_1[0]), /* 1 */
 	0,	/* No PER visible constraints */
 	asn_MBR_FCDBasicHeader_1,
-	4,	/* Elements count */
+	5,	/* Elements count */
 	&asn_SPC_FCDBasicHeader_specs_1	/* Additional specs */
 };
 

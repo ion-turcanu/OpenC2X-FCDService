@@ -1,6 +1,6 @@
 <fcd>
 	<!-- RSU-related configuration -->
-	<txInterval>5</txInterval> <!-- in seconds ! -->
+	<txInterval>10</txInterval> <!-- in seconds ! -->
 	<nrOfRequests>100</nrOfRequests>
 	<maxDistance>300</maxDistance>  <!-- in meters ! -->
 	<maxHops>3</maxHops>
@@ -9,6 +9,7 @@
 	
 	<!-- Basic Container in CAM -->
 	<isRSU>0</isRSU> <!-- 0 for Vehicle, 1 for RSU -->
+	<isBaseline>0</isBaseline> <!-- activate the Baseline algorithm -->
 	
 	<!-- Timeout for interrogating the LDM -->
 	<timeout>100</timeout> <!-- in ms -->

@@ -298,6 +298,7 @@ BEGIN
 	} (0..255),
 	reserved INTEGER {} (0..255),
 	stationID	StationID,
+	originatorID	StationID,
 	requestID	RequestID
     }
 
